@@ -4,7 +4,7 @@ import pytest
 from io import BytesIO
 import numpy as np
 from numpy.testing import assert_allclose
-from hypothesis import given
+from hypothesis import given, assume
 import hypothesis.strategies as st
 from itertools import product
 
@@ -371,7 +371,7 @@ def test_that_found_cell_contains_point(grid, point, data):
                 st.integers(min_value=0, max_value=grid.zcorn.shape[2] - 1),
             )
         )
-        assert not grid.point_in_cell(point, i, j, k, tolerance=0)
+        assert not grid.point_in_cell(point, i, j, k, tolerance=1e-14)
     else:
         assert grid.point_in_cell(point, *cell)
 
@@ -469,3 +469,34 @@ def test_that_point_in_cell_correctly_assign_vertices_to_faces():
 
     assert grid.point_in_cell(point, 0, 0, 0)
     assert grid.find_cell_containing_point(point) == [(0, 0, 0)]
+
+
+@given(*([st.floats(min_value=0.0, max_value=1.0)] * 3))
+def test_point_in_cell_considers_cells_as_trilinear_shapes(x, y, z):
+    # grid with one cell where the botton face has two elevated
+    # diagonally opposed corners
+    grid = CornerpointGrid(
+        coord=np.array(
+            [
+                [[[0, 0, 0], [0, 0, 1]], [[0, 1, 0], [0, 1, 1]]],
+                [[[1, 0, 0], [1, 0, 1]], [[1, 1, 0], [1, 1, 1]]],
+            ],
+            dtype=np.float32,
+        ),
+        zcorn=np.array([[[[0, 0, 0, 0, 0.05, 1, 1.0, 0.05]]]], dtype=np.float32),
+    )
+
+    def bottom_face_depth(x, y):
+        """The depth of the bottom face at x,y by bilinear interpolation"""
+        xy_1 = (1 - x) * 0.05 + x * 1.0
+        xy_2 = (1 - x) * 1.0 + x * 0.05
+        return (1 - y) * xy_1 + y * xy_2
+
+    # avoid points that is very close to the boundry to avoid
+    # numerical issues
+    assume(np.abs(bottom_face_depth(x, y) - z) >= 0.01)
+
+    # The point is inside the bounding box
+    # so we only need to consider whether it is above
+    # the bilnear bottom face
+    assert grid.point_in_cell([x, y, z], 0, 0, 0) == (z <= bottom_face_depth(x, y))
