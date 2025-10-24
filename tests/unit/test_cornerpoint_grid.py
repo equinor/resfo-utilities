@@ -548,7 +548,7 @@ def test_point_in_cell_considers_cells_as_trilinear_shapes(bottom_heights, x, y,
     def in_bounding_box(point):
         return all(-1 * tolerance <= c <= 1 + tolerance for c in point)
 
-    # avoid points that is very close to the boundry to avoid
+    # avoid points that is very close to the boundary to avoid
     # numerical issues
     assume(np.abs(z) >= 0.01)
     assume(np.abs(bottom_face_depth(x, y) - z) >= 0.01)
