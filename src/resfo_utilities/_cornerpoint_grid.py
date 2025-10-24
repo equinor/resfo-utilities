@@ -92,14 +92,14 @@ class CornerpointGrid:
             of the i,j pillar and coord[i,j,1] is the corresponding bottom end point.
         zcorn:
             A (ni, nj, nk, 8) array where zcorn[i,j,k] is the z value of
-            the 8 corners of the cell at i,j,k.
+            the 8 corners of the cell at i,j,k. The order of the corner z valus are as follows:
+            [TSW, TSE, TNW, TNE, BSW, BSE, BNW, BNE] where N(orth) means higher y,
+            E(east) means higer x, T(op) means lower z (when z is interpreted as depth).
 
         map_axes:
             Optionally each point is interpreted to be relative to some map
             coordinate system. Defaults to the unit coordinate system with
-            origo at (0,0). The order of the corner z valus are as follows:
-            [TSW, TSE, TNW, TNE, BSW, BSE, BNW, BNE] where N(orth) means higher y,
-            E(east) means higer x, T(op) means lower z (when z is interpreted as depth).
+            origo at (0,0).
 
     """
 
@@ -385,6 +385,30 @@ class CornerpointGrid:
 
         return result
 
+    def cell_corners(self, i: int, j: int, k: int) -> npt.NDArray[np.float32]:
+        """Array of coordinates for all corners of the cell at i,j,k
+
+        The order of the corners are the same as in zcorn.
+        """
+        pillar_vertices = np.concatenate(
+            [
+                self.coord[i, j, :],
+                self.coord[i, j + 1, :],
+                self.coord[i + 1, j, :],
+                self.coord[i + 1, j + 1, :],
+            ]
+        )
+        top = pillar_vertices[::2][[0, 2, 1, 3]]
+        bot = pillar_vertices[1::2][[0, 2, 1, 3]]
+        top_z = top[:, 2]
+        bot_z = bot[:, 2]
+
+        def twice(a: npt.NDArray[Any]) -> npt.NDArray[Any]:
+            return np.concatenate([a, a])
+
+        t = (self.zcorn[i, j, k] - twice(top_z)) / twice(bot_z - top_z)
+        return twice(top) + t[:, np.newaxis] * twice(bot - top)
+
     def point_in_cell(
         self,
         points: npt.ArrayLike,
@@ -415,25 +439,9 @@ class CornerpointGrid:
             points = points[np.newaxis, :]
         if map_coordinates and self.map_axes is not None:
             points = self.map_axes.transform_map_points(points)
-        pillar_vertices = np.concatenate(
-            [
-                self.coord[i, j, :],
-                self.coord[i, j + 1, :],
-                self.coord[i + 1, j, :],
-                self.coord[i + 1, j + 1, :],
-            ]
-        )
-        top = pillar_vertices[::2][[0, 2, 1, 3]]
-        bot = pillar_vertices[1::2][[0, 2, 1, 3]]
-        top_z = top[:, 2]
-        bot_z = bot[:, 2]
 
-        def twice(a: npt.NDArray[Any]) -> npt.NDArray[Any]:
-            return np.concatenate([a, a])
+        vertices = self.cell_corners(i, j, k).astype(np.float64)
 
-        t = (self.zcorn[i, j, k] - twice(top_z)) / twice(bot_z - top_z)
-        vertices = twice(top) + t[:, np.newaxis] * twice(bot - top)
-        vertices = vertices.astype(np.float64)
         corner_signs = np.array(
             [
                 [-1, -1, -1],

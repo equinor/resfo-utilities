@@ -382,6 +382,35 @@ def test_that_found_cell_contains_point(grid, point, data):
         assert grid.point_in_cell(point, *cell)
 
 
+@given(
+    grid=regular_grids(),
+    point=st.tuples(coordinates, coordinates, coordinates),
+    data=st.data(),
+)
+def test_that_on_regular_grids_point_in_cell_is_the_same_as_in_bounding_box(
+    grid, point, data
+):
+    cell = data.draw(
+        st.tuples(
+            st.integers(min_value=0, max_value=grid.zcorn.shape[0] - 1),
+            st.integers(min_value=0, max_value=grid.zcorn.shape[1] - 1),
+            st.integers(min_value=0, max_value=grid.zcorn.shape[2] - 1),
+        )
+    )
+    cell_corners = grid.cell_corners(*cell)
+    tolerance = 1e-6
+    min_point = cell_corners.min(axis=0) - tolerance
+    max_point = cell_corners.max(axis=0) - tolerance
+
+    # avoid points close to the boundary
+    assume(np.all(np.abs(point - min_point) >= 0.01))
+    assume(np.all(np.abs(max_point - point) >= 0.01))
+
+    assert grid.point_in_cell(point, *cell, tolerance) == (
+        np.all(min_point <= point) and np.all(point <= max_point)
+    )
+
+
 def test_that_map_coordinates_parameter_sets_the_coordinate_system_for_points():
     # unit cell grid with map axes
     # translating origin to 100, 100
