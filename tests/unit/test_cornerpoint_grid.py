@@ -471,7 +471,7 @@ def test_that_point_in_cell_correctly_assign_vertices_to_faces():
     assert grid.find_cell_containing_point(point) == [(0, 0, 0)]
 
 
-@given(*([st.floats(min_value=0.0, max_value=1.0)] * 3))
+@given(*([st.floats(min_value=-1.0, max_value=2.0)] * 3))
 @pytest.mark.parametrize(
     "bottom_heights",
     [
@@ -508,11 +508,18 @@ def test_point_in_cell_considers_cells_as_trilinear_shapes(bottom_heights, x, y,
         xy_2 = (1 - x) * grid.zcorn[0, 0, 0, 6] + x * grid.zcorn[0, 0, 0, 7]
         return (1 - y) * xy_1 + y * xy_2
 
+    tolerance = 1e-6
+
+    def in_bounding_box(point):
+        return all(-1 * tolerance <= c <= 1 + tolerance for c in point)
+
     # avoid points that is very close to the boundry to avoid
     # numerical issues
+    assume(np.abs(z) >= 0.01)
     assume(np.abs(bottom_face_depth(x, y) - z) >= 0.01)
 
-    # The point is inside the bounding box
-    # so we only need to consider whether it is above
-    # the bilnear bottom face
-    assert grid.point_in_cell([x, y, z], 0, 0, 0) == (z <= bottom_face_depth(x, y))
+    # only the bottom face is different from the bounding box
+    # so containment is the same as the conjunction of the two conditions
+    assert grid.point_in_cell([x, y, z], 0, 0, 0, tolerance) == (
+        z <= bottom_face_depth(x, y) and in_bounding_box((x, y, z))
+    )
