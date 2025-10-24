@@ -512,7 +512,7 @@ def test_that_point_in_cell_correctly_assign_vertices_to_faces():
     [
         pytest.param(
             [0.05, 1.0, 1.0, 0.05],
-            id="the botton face has two elevated diagonally opposed corners",
+            id="the bottom face has two elevated diagonally opposed corners",
         ),
         pytest.param(
             [0.0, 1.0, 1.0, 1.0],
