@@ -94,7 +94,7 @@ class CornerpointGrid:
             A (ni, nj, nk, 8) array where zcorn[i,j,k] is the z value of
             the 8 corners of the cell at i,j,k. The order of the corner z valus are as follows:
             [TSW, TSE, TNW, TNE, BSW, BSE, BNW, BNE] where N(orth) means higher y,
-            E(east) means higer x, T(op) means lower z (when z is interpreted as depth).
+            E(east) means higher x, T(op) means lower z (when z is interpreted as depth).
 
         map_axes:
             Optionally each point is interpreted to be relative to some map
