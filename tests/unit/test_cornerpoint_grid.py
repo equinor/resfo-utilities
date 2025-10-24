@@ -472,9 +472,25 @@ def test_that_point_in_cell_correctly_assign_vertices_to_faces():
 
 
 @given(*([st.floats(min_value=0.0, max_value=1.0)] * 3))
-def test_point_in_cell_considers_cells_as_trilinear_shapes(x, y, z):
-    # grid with one cell where the botton face has two elevated
-    # diagonally opposed corners
+@pytest.mark.parametrize(
+    "bottom_heights",
+    [
+        pytest.param(
+            [0.05, 1.0, 1.0, 0.05],
+            id="the botton face has two elevated diagonally opposed corners",
+        ),
+        pytest.param(
+            [0.0, 1.0, 1.0, 1.0],
+            id="one bottom corner is collapsed onto the corresponding top corner",
+        ),
+        pytest.param(
+            [0.0, 0.0, 1.0, 1.0],
+            id="one bottom edge is collapsed onto the corresponding top edge",
+        ),
+    ],
+)
+def test_point_in_cell_considers_cells_as_trilinear_shapes(bottom_heights, x, y, z):
+    # All grids are unit grids except for the bottom face
     grid = CornerpointGrid(
         coord=np.array(
             [
@@ -483,13 +499,13 @@ def test_point_in_cell_considers_cells_as_trilinear_shapes(x, y, z):
             ],
             dtype=np.float32,
         ),
-        zcorn=np.array([[[[0, 0, 0, 0, 0.05, 1, 1.0, 0.05]]]], dtype=np.float32),
+        zcorn=np.array([[[[0, 0, 0, 0, *bottom_heights]]]], dtype=np.float32),
     )
 
     def bottom_face_depth(x, y):
         """The depth of the bottom face at x,y by bilinear interpolation"""
-        xy_1 = (1 - x) * 0.05 + x * 1.0
-        xy_2 = (1 - x) * 1.0 + x * 0.05
+        xy_1 = (1 - x) * grid.zcorn[0, 0, 0, 4] + x * grid.zcorn[0, 0, 0, 5]
+        xy_2 = (1 - x) * grid.zcorn[0, 0, 0, 6] + x * grid.zcorn[0, 0, 0, 7]
         return (1 - y) * xy_1 + y * xy_2
 
     # avoid points that is very close to the boundry to avoid
