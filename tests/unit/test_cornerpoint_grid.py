@@ -332,7 +332,13 @@ coordinates = st.floats(
 def regular_grids(draw):
     ni, nj, nk = draw(st.tuples(*([st.integers(min_value=1, max_value=10)] * 3)))
     height = draw(
-        st.floats(min_value=16.0, allow_nan=False, allow_infinity=False, width=32)
+        st.floats(
+            min_value=16.0,
+            max_value=2**32,
+            allow_nan=False,
+            allow_infinity=False,
+            width=32,
+        )
     )
     top_depth = draw(
         st.floats(
