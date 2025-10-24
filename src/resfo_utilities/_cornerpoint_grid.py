@@ -92,7 +92,8 @@ class CornerpointGrid:
             of the i,j pillar and coord[i,j,1] is the corresponding bottom end point.
         zcorn:
             A (ni, nj, nk, 8) array where zcorn[i,j,k] is the z value of
-            the 8 corners of the cell at i,j,k. The order of the corner z values are as follows:
+            the 8 corners of the cell at i,j,k. The order of the corner z values
+            are as follows:
             [TSW, TSE, TNW, TNE, BSW, BSE, BNW, BNE] where N(orth) means higher y,
             E(east) means higher x, T(op) means lower z (when z is interpreted as depth).
 
@@ -260,6 +261,7 @@ class CornerpointGrid:
                 Defaults to True.
             tolerance:
                 The maximum distance to the cell boundary a point can have to
+                be considered to be contained in the cell.
 
         Returns:
             list of i,j,k indecies for each point (or None if the
@@ -420,12 +422,14 @@ class CornerpointGrid:
     ) -> npt.NDArray[np.bool_]:
         """Whether the points (x,y,z) is in the cell at (i,j,k).
 
+        For containment the cell are considered to have bilinear faces.
+
         Param:
             points:
                 x,y,z triple or array of x,y,z triples to be tested for containment.
             tolerance:
-                The maximum distance to the cell boundary a point can have to
-                be considered to be contained in the cell.
+                The tolerance used for numerical precision in the linear
+                interpolation calculation.
             map_coordinates:
                 Whether the given points are in the mapaxes coordinate system,
                 defaults to true.
