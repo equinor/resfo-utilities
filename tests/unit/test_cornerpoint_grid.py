@@ -400,7 +400,7 @@ def test_that_on_regular_grids_point_in_cell_is_the_same_as_in_bounding_box(
     cell_corners = grid.cell_corners(*cell)
     tolerance = 1e-6
     min_point = cell_corners.min(axis=0) - tolerance
-    max_point = cell_corners.max(axis=0) - tolerance
+    max_point = cell_corners.max(axis=0) + tolerance
 
     # avoid points close to the boundary
     assume(np.all(np.abs(point - min_point) >= 0.01))
