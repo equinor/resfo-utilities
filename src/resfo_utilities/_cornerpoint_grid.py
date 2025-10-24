@@ -359,8 +359,10 @@ class CornerpointGrid:
                     for k in range(self.zcorn.shape[2]):
                         zcorn = self.zcorn[i, j, k]
                         z = p[2]
-                        # Prune by bounding box first then check whether point_in_cell
-                        if (
+                        # First check if point is within a box contained by the deepest top point
+                        # and shallowest bottom point ot the cell. If not, prune by bounding box first
+                        # then check whether point_in_cell
+                        if zcorn[::2].max() <= z <= zcorn[1::2].min() or (
                             zcorn.min() - tolerance <= z <= zcorn.max() + tolerance
                             and self.point_in_cell(p, i, j, k, map_coordinates=False)
                         ):
