@@ -10,6 +10,7 @@ import warnings
 from matplotlib.path import Path
 import heapq
 from functools import cached_property
+import itertools
 
 
 class InvalidEgridFileError(ValueError):
@@ -341,7 +342,12 @@ class CornerpointGrid:
             found = False
             mesh = self._pillars_z_plane_intersection(p[2])
             if prev_ij is None:
-                queue = [Quad(mesh, 0, 0, p)]
+                queue = [
+                    Quad(mesh, initial_i, initial_j, p)
+                    for initial_i, initial_j in _get_start_points(
+                        mesh.shape[0], mesh.shape[1]
+                    )
+                ]
             else:
                 queue = [Quad(mesh, *prev_ij, p)]
             visited = set([(queue[0].i, queue[0].j)])
@@ -516,3 +522,13 @@ class CornerpointGrid:
         # Result: (x, y) coordinates for all lines at z
         result = np.column_stack((x, y))
         return result.reshape(shape[0], shape[1], 2)
+
+
+def _get_start_points(length_x: int, length_y: int) -> list[tuple[int, int]]:
+    num_points_x = 2 * (length_x // 100) + 3
+    num_points_y = 2 * (length_y // 100) + 3
+
+    start_indexes_i = np.linspace(0, length_x - 1, num_points_x, dtype=int)[1::2]
+    start_indexes_j = np.linspace(0, length_y - 1, num_points_y, dtype=int)[1::2]
+
+    return list(itertools.product(start_indexes_i, start_indexes_j))
