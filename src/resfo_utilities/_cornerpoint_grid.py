@@ -341,7 +341,9 @@ class CornerpointGrid:
             found = False
             mesh = self._pillars_z_plane_intersection(p[2])
             if prev_ij is None:
-                queue = [Quad(mesh, 0, 0, p)]
+                initial_i = (mesh.shape[0] - 1) // 2
+                initial_j = (mesh.shape[1] - 1) // 2
+                queue = [Quad(mesh, initial_i, initial_j, p)]
             else:
                 queue = [Quad(mesh, *prev_ij, p)]
             visited = set([(queue[0].i, queue[0].j)])
