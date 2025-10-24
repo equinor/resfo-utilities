@@ -457,8 +457,10 @@ class CornerpointGrid:
 
         def residual(
             point: tuple[float, float, float],
-        ) -> Callable[[list[float]], float]:
-            def inner(xi_eta_zeta: list[float]) -> float:
+        ) -> Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]:
+            def inner(
+                xi_eta_zeta: npt.NDArray[np.float64],
+            ) -> npt.NDArray[np.float64]:
                 xi, eta, zeta = xi_eta_zeta
                 shape_matrix = (
                     1
@@ -490,8 +492,10 @@ class CornerpointGrid:
                 solutions.append(False)
             else:
                 solutions.append(
-                    np.all(np.abs(sol.x) <= 1.0 + tolerance)
-                    and np.linalg.norm(residual(point)(sol.x)) <= 1e-4 + tolerance
+                    bool(
+                        np.all(np.abs(sol.x) <= 1.0 + tolerance)
+                        and np.linalg.norm(residual(point)(sol.x)) <= 1e-4 + tolerance
+                    )
                 )
         return np.array(solutions, dtype=np.bool_)
 

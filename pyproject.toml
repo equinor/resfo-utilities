@@ -45,8 +45,8 @@ dev = [
     "hypothesis",
     "pre-commit",
     "mypy",
-    "types-shapely",
     "pytest-benchmark",
+    "scipy-stubs",
 ]
 
 [tool.setuptools_scm]
