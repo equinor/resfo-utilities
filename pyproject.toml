@@ -15,7 +15,7 @@ classifiers=[
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
-dependencies = ["numpy","resfo", "scipy"]
+dependencies = ["numpy","resfo", "scipy", "natsort"]
 dynamic=["version"]
 
 authors = [
