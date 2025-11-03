@@ -14,16 +14,43 @@ import numpy as np
 
 
 class InvalidSummaryError(ValueError):
-    pass
+    """Raised when a given summary file is not valid.
+
+    Can be raised either when the file can't be read (eg. a directory)
+    or its contents is not valid.
+    """
 
 
 @dataclass
 class SummaryKeyword:
+    """One member of the KEYWORDS array.
+
+    Attributes:
+        summary_variable:
+            The variable name, eg WOPR, or FOPT.
+        number:
+            A number associated with the keyword,
+            eg. for block variables it is the index of the block.
+        name:
+            A name associated with the keyword,
+            eg. for well variables it is the name of the well.
+        lgr_name:
+            If a local variable then the name of the Local Grid
+            Refinement.
+        li:
+            The i index of the host cell for the LGR.
+        lj:
+            The j index of the host cell for the LGR.
+        lk:
+            The k index of the host cell for the LGR.
+        unit:
+            The units for the value of the keyword, eg. for
+            FOPR it may be SM3/DAY.
+    """
+
     summary_variable: str
     number: int | None = None
     name: str | None = None
-    nx: int | None = None
-    ny: int | None = None
     lgr_name: str | None = None
     li: int | None = None
     lj: int | None = None
@@ -35,6 +62,12 @@ FileOpener: TypeAlias = Callable[[], IO[Any]]
 
 
 class SummaryReader:
+    """Reader for summary files.
+
+    The result of running a reservoir simulator is a number of time vectors
+    which are written to summary files.
+    """
+
     @overload
     def __init__(
         self,
@@ -62,6 +95,25 @@ class SummaryReader:
         smspec: FileOpener | None = None,
         summaries: Iterable[FileOpener] | None = None,
     ):
+        """
+        Args:
+            case_path:
+                The path to one summary file or the basename
+                of several summary files. By giving just the base name,
+                eg. `path/to/CASE`, SummaryReader will look for summary
+                files named eg. `path/to/CASE.SMSPEC`, `path/to/CASE.UNSMRY`
+                `path/to/CASE.FSMSPEC`, `path/to/CASE.S0001`, etc. depending
+                on whether the summary is formatted and unified.
+
+                The order in which summary files will looked for in is formatted first
+                then unified first lexiographicall, ie.: UNSMRY, Snnnn, FUNSMRY, and
+                then Annnn.
+
+                By giving an extension, only summary files that match the given
+                formatted or unified combination is looked for, ie. if
+                case_path="CASE.UNSMRY" then only "CASE.SMSPEC" and "CASE.UNSMRY"
+                will be opened.
+        """
         if case_path is None and (smspec is None or summaries is None):
             raise ValueError(
                 "SummaryReader must be initialized with"
@@ -74,7 +126,7 @@ class SummaryReader:
             )
 
         if case_path is not None:
-            self._smspec, self._summaries = _get_file_openers(case_path)
+            self._smspec, self._summaries = self._get_file_openers(case_path)
         else:
             assert smspec is not None
             assert summaries is not None
@@ -86,6 +138,25 @@ class SummaryReader:
         self._dimensions: tuple[int, int, int] | None = None
         self._restart: str | None = None
         self._have_read_smspec = False
+
+    @property
+    def smspec_filename(self) -> str:
+        """The filename of the summary spec file.
+
+        e.g. "CASE.SMSPEC"
+
+        """
+        return self._spec_filename
+
+    @property
+    def summary_filenames(self) -> Iterator[str]:
+        """The filename of the summary file(s).
+
+        e.g. ["CASE.UNSMRY"] for unified or
+        ["CASE.S0001", "CASE.S0002"] for split.
+
+        """
+        return iter(self._summary_filenames)
 
     @property
     def start_date(self) -> datetime:
@@ -100,6 +171,7 @@ class SummaryReader:
 
     @property
     def summary_keywords(self) -> list[SummaryKeyword]:
+        """The list of keywords in the summary."""
         if self._summary_keywords is not None:
             return self._summary_keywords
         self._start_date, self._summary_keywords, self._dimensions, self._restart = (
@@ -111,6 +183,7 @@ class SummaryReader:
 
     @property
     def dimensions(self) -> tuple[int, int, int] | None:
+        """The dimensions of the grid used in the simulation."""
         if self._have_read_smspec:
             return self._dimensions
         self._start_date, self._summary_keywords, self._dimensions, self._restart = (
@@ -121,6 +194,7 @@ class SummaryReader:
 
     @property
     def restart(self) -> str | None:
+        """The name of the case the simulation was restarted from (if any)."""
         if self._have_read_smspec:
             return self._restart
         self._start_date, self._summary_keywords, self._dimensions, self._restart = (
@@ -173,161 +247,30 @@ class SummaryReader:
                 f"Summary files contained invalid contents: {err}"
             ) from err
 
+    def _get_file_openers(
+        self,
+        case_path: str | os.PathLike[str],
+    ) -> tuple[FileOpener, Iterable[FileOpener]]:
+        self.case_path = case_path
+        self._summary_filenames, self._spec_filename = _get_summary_filenames(case_path)
+        mode = "rt" if self._spec_filename.lower().endswith("fsmspec") else "rb"
 
-def _get_file_openers(
-    case_path: str | os.PathLike[str],
-) -> tuple[FileOpener, Iterable[FileOpener]]:
-    summaries, spec = _get_summary_filenames(case_path)
-    mode = "rt" if spec.lower().endswith("fsmspec") else "rb"
+        def opener(s: str | os.PathLike[str]) -> FileOpener:
+            def inner() -> IO[Any]:
+                return open(os.path.abspath(s), mode)
 
-    def opener(s: str | os.PathLike[str]) -> FileOpener:
-        def inner() -> IO[Any]:
-            return open(os.path.abspath(s), mode)
+            return inner
 
-        return inner
-
-    return (opener(spec), [opener(s) for s in summaries])
-
-
-def _has_extension(path: str, ext: str) -> bool:
-    """
-    >>> has_extension("ECLBASE.SMSPEC", "smspec")
-    True
-    >>> has_extension("BASE.SMSPEC", "smspec")
-    False
-    >>> has_extension("BASE.FUNSMRY", "smspec")
-    False
-    >>> has_extension("ECLBASE.smspec", "smspec")
-    True
-    >>> has_extension("ECLBASE.tar.gz.smspec", "smspec")
-    True
-
-    Args:
-        path: File name to check.
-        ext: Allowed extension regex.
-
-    Returns:
-        ``True`` if the file has any of the extensions in ``exts``.
-    """
-    if "." not in path:
-        return False
-    splitted = path.split(".")
-    return re.fullmatch(ext, splitted[-1].lower()) is not None
-
-
-def _is_base_with_extension(base: str, path: str, ext: str) -> bool:
-    """
-    >>> is_base_with_extension("ECLBASE", "ECLBASE.SMSPEC", ["smspec"])
-    True
-    >>> is_base_with_extension("ECLBASE", "BASE.SMSPEC", ["smspec"])
-    False
-    >>> is_base_with_extension("ECLBASE", "BASE.FUNSMRY", ["smspec"])
-    False
-    >>> is_base_with_extension("ECLBASE", "ECLBASE.smspec", ["smspec"])
-    True
-    >>> is_base_with_extension("ECLBASE.tar.gz", "ECLBASE.tar.gz.smspec", ["smspec"])
-    True
-
-    Args:
-        base: Basename without extension.
-        path: Candidate path.
-        exts: Allowed extension regex pattern.
-
-    Returns:
-        ``True`` if ``path`` is ``base`` with one of ``exts``.
-    """
-    if "." not in path:
-        return False
-    splitted = path.split(".")
-    return (
-        ".".join(splitted[0:-1]) == base
-        and re.fullmatch(ext, splitted[-1].lower()) is not None
-    )
-
-
-ANY_SUMMARY_EXTENSION = r"unsmry|smspec|funsmry|fsmspec|s\d\d\d\d|a\d\d\d\d"
-
-
-def _get_summary_filenames(filepath: str | os.PathLike[str]) -> tuple[list[str], str]:
-    directory, file_name = os.path.split(filepath)
-    if "." in file_name:
-        case_name = ".".join(file_name.split(".")[:-1])
-    else:
-        case_name = file_name
-    specified_formatted = _has_extension(file_name, r"funsmry|fsmspec|a\d\d\d\d")
-    specified_unformatted = _has_extension(file_name, r"unsmry|smspec|s\d\d\d\d")
-    specified_unified = _has_extension(file_name, "funsmry")
-    specified_split = _has_extension(file_name, r"x\d\d\d\d|a\d\d\d\d")
-    spec_candidates, smry_candidates = tee(
-        map(
-            lambda x: os.path.join(directory, x),
-            filter(
-                lambda x: _is_base_with_extension(
-                    path=x, base=case_name, ext=ANY_SUMMARY_EXTENSION
-                ),
-                os.listdir(directory or "."),
-            ),
+        return (
+            opener(self._spec_filename),
+            [opener(s) for s in self._summary_filenames],
         )
-    )
-
-    def filter_extension(ext: str, lst: Iterable[str]) -> Iterator[str]:
-        return filter(partial(_has_extension, ext=ext), lst)
-
-    smry_candidates = filter_extension(
-        r"unsmry|funsmry|s\d\d\d\d|a\d\d\d\d", smry_candidates
-    )
-    if specified_split:
-        smry_candidates = filter_extension(r"s\d\d\d\d|a\d\d\d\d", smry_candidates)
-    if specified_unified:
-        smry_candidates = filter_extension("unsmry|funsmry", smry_candidates)
-    if specified_formatted:
-        smry_candidates = filter_extension("funsmry", smry_candidates)
-    if specified_unformatted:
-        smry_candidates = filter_extension("unsmry", smry_candidates)
-    all_summary = natsorted(list(smry_candidates))
-    summary = []
-    pat = None
-    for pat in ("unsmry", r"s\d\d\d\d", "funsmry", r"a\d\d\d\d"):
-        summary = list(filter_extension(pat, all_summary))
-        if summary:
-            break
-
-    if len(summary) != len(all_summary):
-        warnings.warn(f"More than one type of summary file, found {all_summary}")
-    if not summary:
-        raise InvalidSummaryError(
-            f"Could not find any summary files matching {filepath}"
-        )
-
-    if pat in ("unsmry", r"s\d\d\d\d"):
-        spec_candidates = filter_extension("smspec", spec_candidates)
-    else:
-        spec_candidates = filter_extension("fsmspec", spec_candidates)
-
-    spec = list(spec_candidates)
-    if len(spec) > 1:
-        warnings.warn(f"More than one type of summary spec file, found {spec}")
-
-    if not spec:
-        raise InvalidSummaryError(
-            f"Could not find any summary spec matching {filepath}"
-        )
-    return summary, spec[-1]
-
-
-def _stream_name(stream: IO[Any]) -> str:
-    """
-    Returns:
-        The filename for an IO stream or 'unknown stream' if there is no filename
-        attached to the stream (which is the case for eg. `StringIO` and `BytesIO`).
-    """
-    return getattr(stream, "name", "unknown stream")
 
 
 def _read_spec(
     spec_opener: FileOpener,
 ) -> tuple[datetime, list[SummaryKeyword], tuple[int, int, int] | None, str | None]:
-    """Read an SMSPEC file and return a :class:`Spec` describing it.
+    """Read an SMSPEC file and return start date, keywords, dimensions and restart
 
     This function performs validation, determines the index of the
     TIME vector and the unit, and read all available keys.
@@ -336,6 +279,10 @@ def _read_spec(
         spec: A function that returns a file-like object for the
               SMSPEC (binary or text depending on format).
         key_patterns: Patterns identifying which keys to keep.
+
+    Returns:
+        tuple of the start date, list of summary keywords, dimensions,
+        and restart case path.
 
     Raises:
         InvalidSummary: On malformed content (e.g., missing UNITS, STARTDAT, etc.)
@@ -479,9 +426,10 @@ def _read_spec(
             )
         )
 
-    restart = arrays["RESTART "]
-    if restart is not None:
-        restart = "".join(decode_if_byte(s) for s in restart).strip()
+    restart_arr = arrays["RESTART "]
+    restart = None
+    if restart_arr is not None:
+        restart = "".join(decode_if_byte(s) for s in restart_arr).strip()
         if restart and not os.path.isabs(restart):
             restart = os.path.join(os.path.dirname(spec_name), restart)
 
@@ -499,3 +447,138 @@ def _validate_array(
     if vals is resfo.MESS or isinstance(vals, resfo.MESS):
         raise InvalidSummaryError(f"{kw.strip()} in {filename} has incorrect type MESS")
     return vals
+
+
+def _has_extension(path: str, ext: str) -> bool:
+    """
+    >>> _has_extension("ECLBASE.SMSPEC", "smspec")
+    True
+    >>> _has_extension("BASE.SMSPEC", "smspec")
+    True
+    >>> _has_extension("BASE.FUNSMRY", "smspec")
+    False
+    >>> _has_extension("ECLBASE.smspec", "smspec")
+    True
+    >>> _has_extension("ECLBASE.tar.gz.smspec", "smspec")
+    True
+
+    Args:
+        path: File name to check.
+        ext: Allowed extension regex.
+
+    Returns:
+        ``True`` if the file has any of the extensions in ``exts``.
+    """
+    if "." not in path:
+        return False
+    splitted = path.split(".")
+    return re.fullmatch(ext, splitted[-1].lower()) is not None
+
+
+def _is_base_with_extension(base: str, path: str, ext: str) -> bool:
+    """
+    >>> _is_base_with_extension("ECLBASE", "ECLBASE.SMSPEC", "smspec")
+    True
+    >>> _is_base_with_extension("ECLBASE", "BASE.SMSPEC", "smspec")
+    False
+    >>> _is_base_with_extension("ECLBASE", "BASE.FUNSMRY", "smspec")
+    False
+    >>> _is_base_with_extension("ECLBASE", "ECLBASE.smspec", "smspec")
+    True
+    >>> _is_base_with_extension("ECLBASE.tar.gz", "ECLBASE.tar.gz.smspec", "smspec")
+    True
+
+    Args:
+        base: Basename without extension.
+        path: Candidate path.
+        exts: Allowed extension regex pattern.
+
+    Returns:
+        ``True`` if ``path`` is ``base`` with one of ``exts``.
+    """
+    if "." not in path:
+        return False
+    splitted = path.split(".")
+    return (
+        ".".join(splitted[0:-1]) == base
+        and re.fullmatch(ext, splitted[-1].lower()) is not None
+    )
+
+
+ANY_SUMMARY_EXTENSION = r"unsmry|smspec|funsmry|fsmspec|s\d\d\d\d|a\d\d\d\d"
+
+
+def _get_summary_filenames(filepath: str | os.PathLike[str]) -> tuple[list[str], str]:
+    directory, file_name = os.path.split(filepath)
+    if "." in file_name:
+        case_name = ".".join(file_name.split(".")[:-1])
+    else:
+        case_name = file_name
+    specified_formatted = _has_extension(file_name, r"funsmry|fsmspec|a\d\d\d\d")
+    specified_unformatted = _has_extension(file_name, r"unsmry|smspec|s\d\d\d\d")
+    specified_unified = _has_extension(file_name, "funsmry")
+    specified_split = _has_extension(file_name, r"x\d\d\d\d|a\d\d\d\d")
+    spec_candidates, smry_candidates = tee(
+        map(
+            lambda x: os.path.join(directory, x),
+            filter(
+                lambda x: _is_base_with_extension(
+                    path=x, base=case_name, ext=ANY_SUMMARY_EXTENSION
+                ),
+                os.listdir(directory or "."),
+            ),
+        )
+    )
+
+    def filter_extension(ext: str, lst: Iterable[str]) -> Iterator[str]:
+        return filter(partial(_has_extension, ext=ext), lst)
+
+    smry_candidates = filter_extension(
+        r"unsmry|funsmry|s\d\d\d\d|a\d\d\d\d", smry_candidates
+    )
+    if specified_split:
+        smry_candidates = filter_extension(r"s\d\d\d\d|a\d\d\d\d", smry_candidates)
+    if specified_unified:
+        smry_candidates = filter_extension("unsmry|funsmry", smry_candidates)
+    if specified_formatted:
+        smry_candidates = filter_extension("funsmry", smry_candidates)
+    if specified_unformatted:
+        smry_candidates = filter_extension("unsmry", smry_candidates)
+    all_summary = natsorted(list(smry_candidates))
+    summary = []
+    pat = None
+    for pat in ("unsmry", r"s\d\d\d\d", "funsmry", r"a\d\d\d\d"):
+        summary = list(filter_extension(pat, all_summary))
+        if summary:
+            break
+
+    if len(summary) != len(all_summary):
+        warnings.warn(f"More than one type of summary file, found {all_summary}")
+    if not summary:
+        raise InvalidSummaryError(
+            f"Could not find any summary files matching {filepath}"
+        )
+
+    if pat in ("unsmry", r"s\d\d\d\d"):
+        spec_candidates = filter_extension("smspec", spec_candidates)
+    else:
+        spec_candidates = filter_extension("fsmspec", spec_candidates)
+
+    spec = list(spec_candidates)
+    if len(spec) > 1:
+        warnings.warn(f"More than one type of summary spec file, found {spec}")
+
+    if not spec:
+        raise InvalidSummaryError(
+            f"Could not find any summary spec matching {filepath}"
+        )
+    return summary, spec[-1]
+
+
+def _stream_name(stream: IO[Any]) -> str:
+    """
+    Returns:
+        The filename for an IO stream or 'unknown stream' if there is no filename
+        attached to the stream (which is the case for eg. `StringIO` and `BytesIO`).
+    """
+    return getattr(stream, "name", "unknown stream")

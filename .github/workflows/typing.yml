@@ -35,7 +35,7 @@ jobs:
         python-version: "3.13"
 
     - run: |
-        uv sync --extra dev
+        uv sync --all-extras
 
     - run: echo ::add-matcher::.github/mypy-matcher.json
     - name: Run mypy

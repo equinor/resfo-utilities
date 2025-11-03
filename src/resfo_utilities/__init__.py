@@ -5,6 +5,13 @@ from ._cornerpoint_grid import (
     InvalidGridError,
 )
 from ._summary_reader import SummaryReader, InvalidSummaryError
+from ._summary_keys import (
+    SummaryKeyType,
+    history_key,
+    is_rate,
+    make_summary_key,
+    InvalidSummaryKeyError,
+)
 
 __all__ = [
     "CornerpointGrid",
@@ -13,4 +20,9 @@ __all__ = [
     "InvalidGridError",
     "SummaryReader",
     "InvalidSummaryError",
+    "SummaryKeyType",
+    "history_key",
+    "is_rate",
+    "make_summary_key",
+    "InvalidSummaryKeyError",
 ]

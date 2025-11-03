@@ -4,6 +4,7 @@ from resfo_utilities import (
     MapAxes,
     InvalidGridError,
 )
+from resfo_utilities.testing import egrids
 import resfo
 import pytest
 from io import BytesIO
@@ -13,6 +14,7 @@ from hypothesis import given, assume, example
 import hypothesis.strategies as st
 from hypothesis.extra.numpy import arrays, from_dtype
 from itertools import product
+from contextlib import suppress
 
 
 def write_to_buffer(file_contents):
@@ -24,6 +26,15 @@ def write_to_buffer(file_contents):
 
 def pad_to(lst: list[int], target_len: int):
     return np.pad(lst, (0, target_len - len(lst)), mode="constant")
+
+
+@given(egrids)
+def test_that_cornerpoint_grid_reads_all_generated_grids(egrid):
+    buf = BytesIO()
+    egrid.to_file(buf)
+    buf.seek(0)
+    with suppress(InvalidEgridFileError):  # for radial grids
+        _ = CornerpointGrid.read_egrid(buf)
 
 
 def test_that_read_egrid_raises_invalid_egrid_file_when_gridhead_is_mess():

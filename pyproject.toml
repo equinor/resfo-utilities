@@ -15,7 +15,7 @@ classifiers=[
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
-dependencies = ["numpy","resfo", "scipy", "natsort"]
+dependencies = ["numpy", "resfo", "scipy", "natsort"]
 dynamic=["version"]
 
 authors = [
@@ -37,13 +37,16 @@ text = "LGPL-3.0"
 "Bug Tracker" = "https://github.com/equinor/resfo-utilities/issues"
 
 [project.optional-dependencies]
+testing = [ # for the testing submodule
+    "hypothesis",
+    "pydantic",
+]
 doc = [
     "sphinx",
     "sphinx-rtd-theme",
 ]
 dev = [
     "pytest",
-    "hypothesis",
     "pre-commit",
     "mypy",
     "pytest-benchmark",

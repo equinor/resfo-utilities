@@ -12,6 +12,7 @@ repos:
     rev: 'v1.18.2'
     hooks:
     -   id: mypy
+        additional_dependencies: [hypothesis, pydantic, scipy-stubs]
 
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.12.11
@@ -31,6 +32,14 @@ repos:
     name: pytest
     entry: uv
     args: [run, --all-extras, pytest, --benchmark-disable, tests]
+    language: system
+    types: [python]
+    stages: [pre-push]
+    pass_filenames: false
+  - id: pytest-doctest
+    name: pytest-doctest
+    entry: uv
+    args: [run, --all-extras, pytest, --doctest-modules, src]
     language: system
     types: [python]
     stages: [pre-push]
