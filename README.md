@@ -18,7 +18,7 @@ How to contribute
 We use uv to have one synchronized development environment for all packages.
 See [installing uv](https://docs.astral.sh/uv/getting-started/installation/). We
 recommend either installing uv using your systems package manager, or creating
-a small virtual environment you intall base packages into (such as `uv` and `pre-commit`).
+a small virtual environment you install base packages into (such as `uv` and `pre-commit`).
 
 Once uv is installed, you can get a development environment by running:
 
