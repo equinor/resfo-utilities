@@ -34,3 +34,15 @@ You should set up `pre-commit` to ensure style checks are done as you commit:
 ```bash
 uv run pre-commit install --hook-type pre-push
 ```
+
+Documentation
+==============================
+
+The documentation is hosted and can be found at [readthedocs.io](https://resfo-utilities.readthedocs.io/en/latest/).
+
+To build the documentation locally, run:
+```shell
+uv run --all-extras sphinx-build -W -n -E docs/source docs/output
+```
+To open the documentation, open the `index.html` file in the output folder in
+a web browser.
