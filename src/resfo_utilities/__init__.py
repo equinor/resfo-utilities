@@ -4,6 +4,7 @@ from ._cornerpoint_grid import (
     MapAxes,
     InvalidGridError,
 )
+from ._rtf_reader import RftReader, Rft
 from ._summary_reader import SummaryReader, InvalidSummaryError, SummaryKeyword
 from ._summary_keys import (
     SummaryKeyType,
@@ -18,6 +19,8 @@ __all__ = [
     "InvalidEgridFileError",
     "MapAxes",
     "InvalidGridError",
+    "RftReader",
+    "Rft",
     "SummaryReader",
     "SummaryKeyword",
     "InvalidSummaryError",
