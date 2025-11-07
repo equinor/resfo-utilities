@@ -9,3 +9,4 @@ resfo-utilities: A library for working with reservoir simulator output
    self
    glossary
    api_reference
+   user_guide
