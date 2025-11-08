@@ -12,6 +12,7 @@ from ._summary_keys import (
     make_summary_key,
     InvalidSummaryKeyError,
 )
+from ._rft_reader import RFTReader, RFTEntry
 
 __all__ = [
     "CornerpointGrid",
@@ -26,4 +27,6 @@ __all__ = [
     "is_rate",
     "make_summary_key",
     "InvalidSummaryKeyError",
+    "RFTReader",
+    "RFTEntry",
 ]

@@ -52,6 +52,8 @@ import numpy.typing as npt
 import resfo
 import numpy as np
 
+from ._reading import validate_array, stream_name, key2str, decode_if_byte
+
 
 class InvalidSummaryError(ValueError):
     """Raised when a given summary file is not valid.
@@ -59,6 +61,9 @@ class InvalidSummaryError(ValueError):
     Can be raised either when the file can't be read (eg. a directory)
     or its contents is not valid.
     """
+
+
+_validate_array = partial(validate_array, error_class=InvalidSummaryError)
 
 
 @dataclass
@@ -269,7 +274,7 @@ class SummaryReader:
         try:
             for smry_opener in self._summaries:
                 with smry_opener() as smry:
-                    summary_name = _stream_name(smry)
+                    summary_name = stream_name(smry)
 
                     def read_params() -> Iterator[npt.NDArray[np.float32]]:
                         nonlocal last_params
@@ -346,7 +351,7 @@ def _read_spec(
     spec_name = ""
     try:
         with spec_opener() as spec:
-            spec_name = _stream_name(spec)
+            spec_name = stream_name(spec)
 
             arrays: dict[str, npt.NDArray[Any] | None] = dict.fromkeys(
                 [
@@ -447,22 +452,6 @@ def _read_spec(
             return None
         return arr[idx]
 
-    def decode_if_byte(key: bytes | str) -> str:
-        return key.decode() if isinstance(key, bytes) else key
-
-    @overload
-    def key2str(key: bytes | str) -> str:
-        pass
-
-    @overload
-    def key2str(key: None) -> None:
-        pass
-
-    def key2str(key: bytes | str | None) -> str | None:
-        if key is None:
-            return None
-        return decode_if_byte(key).strip()
-
     for i in range(num_keywords):
         summary_keywords.append(
             SummaryKeyword(
@@ -490,14 +479,6 @@ def _read_spec(
         dimensions,
         restart,
     )
-
-
-def _validate_array(
-    kw: str, filename: str, vals: npt.NDArray[Any] | resfo.MessType
-) -> npt.NDArray[Any]:
-    if isinstance(vals, resfo.MessType):
-        raise InvalidSummaryError(f"{kw.strip()} in {filename} has incorrect type MESS")
-    return vals
 
 
 def _has_extension(path: str, ext: str) -> bool:
@@ -620,12 +601,3 @@ def _get_summary_filenames(filepath: str | os.PathLike[str]) -> tuple[list[str],
     if not spec:
         raise FileNotFoundError(f"Could not find any summary spec matching {filepath}")
     return summary, spec[-1]
-
-
-def _stream_name(stream: IO[Any]) -> str:
-    """
-    Returns:
-        The filename for an IO stream or 'unknown stream' if there is no filename
-        attached to the stream (which is the case for eg. `StringIO` and `BytesIO`).
-    """
-    return getattr(stream, "name", "unknown stream")
