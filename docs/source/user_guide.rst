@@ -1,6 +1,7 @@
 User Guide
 ==========
-Resfo is an abbreviation for "REservoir Simulation Fortran Output"
+Resfo-utilities is a toolkit for working with parsed reservoir simulator output parsed from
+Resfo. Resfo is an abbreviation for "REservoir Simulation Fortran Output".
 
 Purpose
 -------
