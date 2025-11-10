@@ -11,7 +11,7 @@ Getting started
 ---------------
 
 Details regarding the output format of reservoir simulators can be found `here <https://resfo.readthedocs.io/en/latest/the_file_format.html>`_.
-The resfo package can be downloaded from pypi using
+The resfo-utilities package can be downloaded from pypi using
 
 .. code-block:: shell
 
