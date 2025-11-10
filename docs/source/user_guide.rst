@@ -1,6 +1,6 @@
 User Guide
 ==========
-Resfo is an abbreviation for "Results Fortran Output"
+Resfo is an abbreviation for "REservoir Simulation Fortran Output"
 
 Purpose
 -------
