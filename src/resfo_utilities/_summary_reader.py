@@ -1,3 +1,43 @@
+"""
+The summary files contain a number of time vectors. There is a
+``.SMSPEC`` (or ``.FSMSPEC`` for :term:`formatted files`) which
+describes what is in each time vector, and what the start date is.
+
+The time vector is guaranteed to have one value for each report
+step (described in the schedule section of the ``.DATA`` file),
+but could have additional values at times between the
+report steps called ministeps.
+
+Summary files can also be unified or split. A unified summary
+file has the extenion ``.UNSMRY`` (or ``.FUNSMRY``  for :term:`formatted files`)
+and is enabled by adding the keyword ``UNIFOUT`` to the ``.DATA`` file.
+For split summaries there is one file for each report step, named ``.S0001``,
+``.S0002`` and so on (``.A0001`` for :term:`formatted files`).
+
+
+:py:class:`SummaryReader` lazily reads these files, and
+and can look for what combination of split and formatted
+files are present::
+
+    from resfo_utilities import SummaryReader
+
+    summary = SummaryReader("BASENAME")
+    print(f"The start date is {summary.start_date}")
+
+    for step, val in enumerate(summary.values()):
+        print(f"For step {step}:")
+        for kw, v in zip(summary.summary_keywords, val):
+            print(f" The keyword {kw} had the value {v}")
+
+This will print all the summary vectors produced from
+``BASENAME.DATA`` (regardless of whether it is ``.UNSMRY``, ``.FUNSMRY``, etc.)
+
+
+See `OPM Flow manual`_ section F for details.
+
+.. _OPM Flow manual: https://opm-project.org/wp-content/uploads/2023/06/OPM_Flow_Reference_Manual_2023-04_Rev-0_Reduced.pdf
+"""
+
 from dataclasses import dataclass
 import os
 from collections.abc import Iterable, Iterator
@@ -63,9 +103,6 @@ FileOpener: TypeAlias = Callable[[], IO[Any]]
 
 class SummaryReader:
     """Reader for summary files.
-
-    The result of running a reservoir simulator is a number of time vectors
-    which are written to summary files.
 
     Each file is opened when the corresponding data is requested so asking for
     the properties of SummaryReader may raise `InvalidSummaryError` if the

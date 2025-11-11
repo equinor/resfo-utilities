@@ -18,6 +18,11 @@ Glossary
         the transverse Mercator map projection of the Earth spheroid. See
         the `UTM wikipedia page`_.
 
+    formatted files
+        The output files come in two flavours: formatted and unformatted. If the ``.DATA`` file contains
+        ``FMTOUT`` then the output will be formatted. Generally, formatted file
+        extension start with an "F", so ``.FEGRID`` instead of ``.EGRID``.
+
 .. _OPM Flow manual: https://opm-project.org/wp-content/uploads/2023/06/OPM_Flow_Reference_Manual_2023-04_Rev-0_Reduced.pdf
 .. _corner-point grid wikipedia page: https://en.wikipedia.org/wiki/Corner-point_grid
 .. _UTM wikipedia page: https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system

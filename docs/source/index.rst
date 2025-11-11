@@ -12,8 +12,9 @@ Quick Start Guide
 
    pip install resfo-utilities
 
-We assume that you have a reservoir simulator input (a ``.DATA``
-file), but you can pick up one `here <https://github.com/OPM/opm-tests>`__.
+We assume that you have some reservoir simulator input (a ``.DATA`` file), but if
+you want to start testing you can pick up one `here
+<https://github.com/OPM/opm-tests>`__.
 
 By giving that input to a reservoir simulator (flow in this case):
 
