@@ -29,6 +29,19 @@ Summaries
    :members:
    :no-index:
 
+RFT
+---
+
+.. automodule:: resfo_utilities._rft_reader
+
+.. autoclass:: resfo_utilities.RFTEntry
+   :members:
+   :no-index:
+
+.. autoclass:: resfo_utilities.RFTReader
+   :members:
+   :no-index:
+
 Summarykeys
 ------------
 

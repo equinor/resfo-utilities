@@ -12,7 +12,13 @@ from ._summary_keys import (
     make_summary_key,
     InvalidSummaryKeyError,
 )
-from ._rft_reader import RFTReader, RFTEntry
+from ._rft_reader import (
+    RFTReader,
+    RFTEntry,
+    InvalidRFTError,
+    RFTDataCategory,
+    TypeOfWell,
+)
 
 __all__ = [
     "CornerpointGrid",
@@ -29,4 +35,7 @@ __all__ = [
     "InvalidSummaryKeyError",
     "RFTReader",
     "RFTEntry",
+    "InvalidRFTError",
+    "RFTDataCategory",
+    "TypeOfWell",
 ]

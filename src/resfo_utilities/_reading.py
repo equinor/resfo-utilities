@@ -6,10 +6,10 @@ import numpy.typing as npt
 def validate_array(
     kw: str,
     filename: str,
-    vals: npt.NDArray[Any] | resfo.MESS,
+    vals: npt.NDArray[Any] | resfo.MessType,
     error_class: type[Exception],
 ) -> npt.NDArray[Any]:
-    if vals is resfo.MESS or isinstance(vals, resfo.MESS):
+    if isinstance(vals, resfo.MessType):
         raise error_class(f"{kw.strip()} in {filename} has incorrect type MESS")
     return vals
 

@@ -23,6 +23,12 @@ Glossary
         ``FMTOUT`` then the output will be formatted. Generally, formatted file
         extension start with an "F", so ``.FEGRID`` instead of ``.EGRID``.
 
+    well connection
+        In reservoir simulation, wells consists of connections. These are the
+        i,j,k coordinates in the :term:`corner-point grid` which the `well trajectory`_
+        go through.
+
 .. _OPM Flow manual: https://opm-project.org/wp-content/uploads/2023/06/OPM_Flow_Reference_Manual_2023-04_Rev-0_Reduced.pdf
 .. _corner-point grid wikipedia page: https://en.wikipedia.org/wiki/Corner-point_grid
 .. _UTM wikipedia page: https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system
+.. _well trajectory: https://wiki.aapg.org/Wellbore_trajectory

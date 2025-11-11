@@ -29,6 +29,20 @@ API Reference
 
 .. autofunction:: resfo_utilities.history_key
 
+.. autoclass:: resfo_utilities.RFTEntry
+   :members:
+
+.. autoclass:: resfo_utilities.RFTReader
+   :members:
+
+.. autoclass:: resfo_utilities.RFTDataCategory
+   :members:
+
+.. autoclass:: resfo_utilities.TypeOfWell
+   :members:
+
+.. autoexception:: resfo_utilities.InvalidRFTError
+
 Testing
 -------
 .. automodule:: resfo_utilities.testing
