@@ -328,7 +328,7 @@ class EGrid:
         """write the EGrid to file.
 
         Args:
-            filelike (str,Path,stream): The egrid file to write to.
+            filelike: The egrid file to write to.
         """
         contents = []
         contents.append(("FILEHEAD", self.file_head.to_egrid()))

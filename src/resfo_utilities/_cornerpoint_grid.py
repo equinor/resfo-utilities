@@ -1,3 +1,23 @@
+"""
+A :term:`corner-point grid` is a tessellation of a 3D volume where
+each cell is a hexahedron.
+
+Each cell is identified by a integer coordinate (i,j,k).
+For each i,j there is are four straight lines, defined by their end-points
+called a :term:`pillar`. The end-points form two surfaces, one
+for the top end-points and one for the bottom end points, which
+are in the :py:attr:`resfo_utilities.CornerpointGrid.coord` array.
+
+For the cell at position i,j,k, its eight corner vertices are defined by
+giving the z values along the pillars at [(i,j), (i+1, j), (i, j+1), (i+1, j+1)]
+which are in the :py:attr:`resfo_utilities.CornerpointGrid.zcorn` array.
+
+
+Usually, a corner-point grid contains x,y values that needs to be transformed
+into a map coordinate system (which could be :term:`UTM-coordinates`). That
+coordinate system is represented by :py:class:`resfo_utilities.MapAxes`.
+"""
+
 from __future__ import annotations
 import os
 from typing import Self, Any, IO, TypeVar, Callable
@@ -22,10 +42,6 @@ class InvalidGridError(ValueError):
 @dataclass
 class MapAxes:
     """The axes of the map coordinate system.
-
-    Usually, a corner-point grid contains x,y values that needs to be transformed
-    into a map coordinate system (which could be :term:`UTM-coordinates`). That
-    coordinate system is represented by MapAxes.
 
     Note that regardless of the size of the axes, when transforming from the grid
     coordinate system to the map coordinate system, scaling is not applied.
@@ -74,20 +90,7 @@ class MapAxes:
 
 @dataclass
 class CornerpointGrid:
-    """
-    A :term:`corner-point grid` is a tessellation of a 3D volume where
-    each cell is a hexahedron.
-
-    Each cell is identified by a integer coordinate (i,j,k).
-    For each i,j there is are four straight lines, defined by their end-points
-    called a :term:`pillar`. The end-points form two surfaces, one
-    for the top end-points and one for the bottom end points, which
-    are in the CornerpointGrid.coord array.
-
-    For the cell at position i,j,k, its eight corner vertices are defined by
-    giving the z values along the pillars at [(i,j), (i+1, j), (i, j+1), (i+1, j+1)]
-    which are in the CornerpointGrid.zcorn array.
-
+    """A :term:`corner-point grid`.
 
     Attributes:
         coord:
@@ -104,7 +107,9 @@ class CornerpointGrid:
             Optionally each point is interpreted to be relative to some map
             coordinate system. Defaults to the unit coordinate system with
             origin at (0,0).
-
+    Raises:
+        InvalidGridError:
+            If coord or zcorn does not have correct shape.
     """
 
     coord: npt.NDArray[np.float32]

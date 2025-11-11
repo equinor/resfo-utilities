@@ -12,7 +12,7 @@ Corner-point Grid
    :members:
    :no-index:
 
-.. autoclass:: resfo_utilities.InvalidEgridFileError
+.. autoexception:: resfo_utilities.InvalidEgridFileError
    :no-index:
 
 .. autoclass:: resfo_utilities.MapAxes
@@ -28,7 +28,7 @@ Summaries
    :members:
    :no-index:
 
-.. autoclass:: resfo_utilities.InvalidSummaryError
+.. autoexception:: resfo_utilities.InvalidSummaryError
    :no-index:
 
 .. autoclass:: resfo_utilities.SummaryKeyword
@@ -43,7 +43,7 @@ Summarykeys
 .. autofunction:: resfo_utilities.make_summary_key
    :no-index:
 
-.. autofunction:: resfo_utilities.InvalidSummaryKeyError
+.. autoexception:: resfo_utilities.InvalidSummaryKeyError
    :no-index:
 
 .. autoclass:: resfo_utilities.SummaryKeyType
