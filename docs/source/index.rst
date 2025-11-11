@@ -2,8 +2,8 @@
 resfo-utilities: A library for working with reservoir simulator output
 ======================================================================
 
-resfo-utilities is a library for working with output from
- several reservoir simulators such as `opm flow <https://github.com/OPM/opm-simulators>`__.
+resfo-utilities is a library for working with output from several reservoir
+simulators such as `opm flow <https://github.com/OPM/opm-simulators>`__.
 
 Quick Start Guide
 -----------------
