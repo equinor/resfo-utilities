@@ -276,7 +276,8 @@ class RFTReader(Iterable[RFTEntry]):
                 kw = time_elem.read_keyword().strip()
                 if kw != "TIME":
                     raise InvalidRFTError(
-                        f"Unexpected keyword {kw} in rft file {stream_name(self._file_stream)}"
+                        f"Unexpected keyword {kw} in rft file {self._name}. "
+                        "Expected RFT file to start with 'TIME'"
                     )
                 incomplete_entry = True
                 time_array = _validate_array("TIME", self._name, time_elem.read_array())
@@ -293,7 +294,8 @@ class RFTReader(Iterable[RFTEntry]):
                         kw = elem.read_keyword().strip()
                         if kw != expected:
                             raise InvalidRFTError(
-                                f"Unexpected keyword {kw} in rft file {self._name}"
+                                f"Unexpected keyword {kw} in rft file {self._name}. "
+                                f"Expected {expected}."
                             )
                         values.append(
                             _validate_array(kw, self._name, elem.read_array())
