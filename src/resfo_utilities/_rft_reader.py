@@ -66,7 +66,7 @@ class RFTEntry(Mapping[str, npt.NDArray[Any]]):
         lgr_name: Local grid refinement name, if applicable.
         depth_units: Units for depth measurements.
         pressure_units: Units for pressure measurements.
-        type_of_data: Type of test data (RFT, PLT, or SEGMENT).
+        types_of_data: Type of test data (RFT, PLT, or SEGMENT).
         type_of_well: Well completion type (STANDARD or MULTI_SEGMENT).
         liquid_flow_rate_units: Units for liquid flow rates.
         gas_flow_rate_units: Units for gas flow rates.
@@ -82,12 +82,12 @@ class RFTEntry(Mapping[str, npt.NDArray[Any]]):
         self,
         time_since_start: datetime.timedelta,
         date: datetime.date,
-        connections: np.ndarray[tuple[int, int, int], np.dtype[np.int32]],
+        connections: np.ndarray[tuple[int, int], np.dtype[np.int32]],
         well: str,
         lgr_name: str | None,
         depth_units: str,
         pressure_units: str,
-        type_of_data: RFTDataCategory,
+        types_of_data: Iterable[RFTDataCategory],
         type_of_well: TypeOfWell,
         liquid_flow_rate_units: str,
         gas_flow_rate_units: str,
@@ -105,7 +105,7 @@ class RFTEntry(Mapping[str, npt.NDArray[Any]]):
         self._lgr_name = lgr_name
         self._depth_units = depth_units
         self._pressure_units = pressure_units
-        self._type_of_data = type_of_data
+        self._types_of_data = types_of_data
         self._type_of_well = type_of_well
         self._liquid_flow_rate_units = liquid_flow_rate_units
         self._gas_flow_rate_units = gas_flow_rate_units
@@ -152,9 +152,9 @@ class RFTEntry(Mapping[str, npt.NDArray[Any]]):
         return self._pressure_units
 
     @property
-    def type_of_data(self) -> str:
-        """Type of test data (RFT, PLT, or SEGMENT)."""
-        return self._type_of_data
+    def types_of_data(self) -> Iterable[RFTDataCategory]:
+        """Types of test data (RFT, PLT, and/or SEGMENT)."""
+        return self._types_of_data
 
     @property
     def type_of_well(self) -> str:

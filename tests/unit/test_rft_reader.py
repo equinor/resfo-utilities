@@ -14,7 +14,11 @@ def write_rft_to_buffer(file_contents):
     return buffer
 
 
-def well_etc(time_units=b"HOURS   ", lgr_name=b"        "):
+def well_etc(
+    time_units=b"HOURS   ",
+    lgr_name=b"        ",
+    data_category=b"R        ",
+):
     return np.array(
         [
             time_units,
@@ -22,7 +26,7 @@ def well_etc(time_units=b"HOURS   ", lgr_name=b"        "):
             lgr_name,
             b"METRES  ",
             b"BARSA   ",
-            b"R       ",
+            data_category,
             b"STANDARD",
             b"SM3/DAY ",
             b"SM3/DAY ",
@@ -179,6 +183,27 @@ def test_that_lgr_name_is_not_none_when_input_contains_non_space():
         )[0].lgr_name
         == "LGRNAME"
     )
+
+
+def test_that_rft_entries_can_have_multiple_categories():
+    buffer = write_rft_to_buffer(
+        [
+            ("TIME", np.array([1.0])),
+            ("DATE", np.array([1, 1, 2000])),
+            ("WELLETC", well_etc(data_category=b"RP      ")),
+            ("CONIPOS", np.array([1])),
+            ("CONJPOS", np.array([1])),
+            ("CONKPOS", np.array([1])),
+            ("PRESSURE", np.array([100.0])),
+        ]
+    )
+    reader = RFTReader(buffer)
+    entries = list(reader)
+    assert len(entries) == 1
+    categories = entries[0].types_of_data
+    assert "R" in categories
+    assert "P" in categories
+    assert "S" not in categories
 
 
 def test_that_reader_can_read_multiple_rft_entries():
