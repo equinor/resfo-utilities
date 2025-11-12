@@ -5,7 +5,7 @@ selected wells along the :term:`well connections<well connection>`.
 The type of properties come in three categories:
 RFT, PLT and segment. For each well, any subset of
 these categories may be present. Which categories
-are present is controlled ``WRFT`` and ``WRFTPLT``
+are present is controlled by the ``WRFT`` and ``WRFTPLT``
 keywords in the ``.DATA`` file.
 
 
