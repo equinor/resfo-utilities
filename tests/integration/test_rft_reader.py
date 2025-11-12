@@ -22,9 +22,7 @@ def test_that_we_can_read_the_eightcells_grid_from_the_simulator(
                 _ = entry.depth_units
                 _ = entry.pressure_units
                 _ = entry.gas_flow_rate_units
-                connections = np.array(
-                    list(entry.connections())
-                )  # simply zip(CONIPOS, CONJPOS, CONKPOS)
+                connections = entry.connections
                 # entry["PRESSURE"] is the raw array from the file
                 pressure = entry["PRESSURE"]
                 assert "PRESSURE" in entry.keys()

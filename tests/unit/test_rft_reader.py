@@ -134,7 +134,7 @@ def test_that_reader_can_read_minimal_valid_rft_entry():
     assert entry.well == "WELL1"
     assert entry.date == datetime.date(2000, 1, 1)
     assert entry.time_since_start == datetime.timedelta(hours=24)
-    assert list(entry.connections()) == [(1, 1, 1), (2, 1, 2)]
+    assert entry.connections.tolist() == [[1, 1, 1], [2, 1, 2]]
     assert_array_equal(entry["PRESSURE"], np.array([100.0, 200.0]))
 
 

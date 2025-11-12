@@ -25,7 +25,8 @@ Typical usage example::
 from __future__ import annotations
 import os
 from typing import Any, IO, Self, Iterator, assert_never
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping
+import numpy as np
 import numpy.typing as npt
 import datetime
 from types import TracebackType
@@ -81,7 +82,7 @@ class RFTEntry(Mapping[str, npt.NDArray[Any]]):
         self,
         time_since_start: datetime.timedelta,
         date: datetime.date,
-        connections: Sequence[tuple[int, int, int]],
+        connections: np.ndarray[tuple[int, int, int], np.dtype[np.int32]],
         well: str,
         lgr_name: str | None,
         depth_units: str,
@@ -100,7 +101,7 @@ class RFTEntry(Mapping[str, npt.NDArray[Any]]):
         self._time_since_start = time_since_start
         self._date = date
         self._well = well
-        self._connections = connections
+        self.connections = connections
         self._lgr_name = lgr_name
         self._depth_units = depth_units
         self._pressure_units = pressure_units
@@ -119,10 +120,6 @@ class RFTEntry(Mapping[str, npt.NDArray[Any]]):
             absorbed_polymer_concentration_units
         )
         self._data: dict[str, npt.NDArray[Any]] = {}
-
-    def connections(self) -> Iterator[tuple[int, int, int]]:
-        """Iterate over well connections as (i, j, k) grid cell indices."""
-        return iter(self._connections)
 
     @property
     def time_since_start(self) -> datetime.timedelta:
@@ -313,7 +310,7 @@ class RFTReader(Iterable[RFTEntry]):
                     entry = RFTEntry(
                         time_since_start,
                         date,
-                        list(zip(values[2], values[3], values[4])),
+                        np.column_stack((values[2], values[3], values[4])),
                         *well_etc[1:],
                     )
                     incomplete_entry = False
