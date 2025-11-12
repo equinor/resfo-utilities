@@ -17,7 +17,7 @@ Typical usage example::
         for entry in rft:
             if "PRESSURE" in entry:
                 print(f"Pressure for well {entry.well} at {entry.date}:")
-                for pos, pressure zip(entry.connections, entry["PRESSURE"]):
+                for pos, pressure in zip(entry.connections, entry["PRESSURE"]):
                     print("{pos}: {pressure} {entry.pressure_units}")
 
 """
