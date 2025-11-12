@@ -25,7 +25,7 @@ Typical usage example::
 from __future__ import annotations
 import os
 from typing import Any, IO, Self, Iterator, assert_never
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Container
 import numpy as np
 import numpy.typing as npt
 import datetime
@@ -87,7 +87,7 @@ class RFTEntry(Mapping[str, npt.NDArray[Any]]):
         lgr_name: str | None,
         depth_units: str,
         pressure_units: str,
-        types_of_data: Iterable[RFTDataCategory],
+        types_of_data: Container[RFTDataCategory],
         type_of_well: TypeOfWell,
         liquid_flow_rate_units: str,
         gas_flow_rate_units: str,
@@ -152,7 +152,7 @@ class RFTEntry(Mapping[str, npt.NDArray[Any]]):
         return self._pressure_units
 
     @property
-    def types_of_data(self) -> Iterable[RFTDataCategory]:
+    def types_of_data(self) -> Container[RFTDataCategory]:
         """Types of test data (RFT, PLT, and/or SEGMENT)."""
         return self._types_of_data
 

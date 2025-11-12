@@ -1,5 +1,5 @@
 import pytest
-from resfo_utilities import RFTReader, InvalidRFTError
+from resfo_utilities import RFTReader, InvalidRFTError, RFTDataCategory
 import resfo
 from io import BytesIO
 import datetime
@@ -201,9 +201,9 @@ def test_that_rft_entries_can_have_multiple_categories():
     entries = list(reader)
     assert len(entries) == 1
     categories = entries[0].types_of_data
-    assert "R" in categories
-    assert "P" in categories
-    assert "S" not in categories
+    assert RFTDataCategory.RFT in categories
+    assert RFTDataCategory.PLT in categories
+    assert RFTDataCategory.SEGMENT not in categories
 
 
 def test_that_reader_can_read_multiple_rft_entries():
