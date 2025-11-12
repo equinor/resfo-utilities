@@ -23,7 +23,7 @@ def well_etc(time_units=b"HOURS   "):
             b"METRES  ",
             b"BARSA   ",
             b"R       ",
-            b"STANDART",
+            b"STANDARD",
             b"SM3/DAY ",
             b"SM3/DAY ",
             b"RM3/DAY ",

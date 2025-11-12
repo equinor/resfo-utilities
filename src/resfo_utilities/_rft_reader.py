@@ -47,7 +47,7 @@ class RFTDataCategory(StrEnum):
 
 
 class TypeOfWell(StrEnum):
-    STANDARD = "STANDART"
+    STANDARD = "STANDARD"
     MULTI_SEGMENT = "MULTSEG"
 
 
