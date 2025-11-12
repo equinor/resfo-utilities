@@ -304,7 +304,8 @@ class RFTReader(Iterable[RFTEntry]):
                     )
                     well_etc = [key2str(v) for v in values[1]]
                     del well_etc[11]  # always blank
-                    well_etc[3] = None if not well_etc[3] else well_etc[3]
+                    # Set lgr_name to None if empty
+                    well_etc[2] = None if not well_etc[2] else well_etc[2]
                     time_units = _TimeUnit(well_etc[0])
                     time_since_start = time_units.make_delta(float(time_array[0]))
                     entry = RFTEntry(

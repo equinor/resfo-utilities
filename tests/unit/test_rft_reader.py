@@ -14,12 +14,12 @@ def write_rft_to_buffer(file_contents):
     return buffer
 
 
-def well_etc(time_units=b"HOURS   "):
+def well_etc(time_units=b"HOURS   ", lgr_name=b"        "):
     return np.array(
         [
             time_units,
             b"WELL1   ",
-            b"        ",
+            lgr_name,
             b"METRES  ",
             b"BARSA   ",
             b"R       ",
@@ -132,10 +132,53 @@ def test_that_reader_can_read_minimal_valid_rft_entry():
     assert len(entries) == 1
     entry = entries[0]
     assert entry.well == "WELL1"
+    assert entry.lgr_name is None
     assert entry.date == datetime.date(2000, 1, 1)
     assert entry.time_since_start == datetime.timedelta(hours=24)
     assert entry.connections.tolist() == [[1, 1, 1], [2, 1, 2]]
     assert_array_equal(entry["PRESSURE"], np.array([100.0, 200.0]))
+
+
+def test_that_lgr_name_is_none_if_spaces_only():
+    assert (
+        list(
+            RFTReader(
+                write_rft_to_buffer(
+                    [
+                        ("TIME", np.array([24.0])),
+                        ("DATE", np.array([1, 1, 2000])),
+                        ("WELLETC", well_etc(lgr_name=b"        ")),
+                        ("CONIPOS", np.array([1, 2])),
+                        ("CONJPOS", np.array([1, 1])),
+                        ("CONKPOS", np.array([1, 2])),
+                        ("PRESSURE", np.array([100.0, 200.0])),
+                    ]
+                )
+            )
+        )[0].lgr_name
+        is None
+    )
+
+
+def test_that_lgr_name_is_not_none_when_input_contains_non_space():
+    assert (
+        list(
+            RFTReader(
+                write_rft_to_buffer(
+                    [
+                        ("TIME", np.array([24.0])),
+                        ("DATE", np.array([1, 1, 2000])),
+                        ("WELLETC", well_etc(lgr_name=b"LGRNAME ")),
+                        ("CONIPOS", np.array([1, 2])),
+                        ("CONJPOS", np.array([1, 1])),
+                        ("CONKPOS", np.array([1, 2])),
+                        ("PRESSURE", np.array([100.0, 200.0])),
+                    ]
+                )
+            )
+        )[0].lgr_name
+        == "LGRNAME"
+    )
 
 
 def test_that_reader_can_read_multiple_rft_entries():
