@@ -59,7 +59,7 @@ def test_that_open_finds_rft_file_with_explicit_extension(tmp_path):
     frft_path = tmp_path / "CASE.FRFT"
     resfo.write(frft_path, ONE_ENTRY, fileformat=resfo.Format.FORMATTED)
     with RFTReader.open(rft_path) as rft:
-        assert rft._file_stream.name == str(rft_path)
+        assert rft._name == str(rft_path)
         assert len(list(rft)) == 1
 
 
