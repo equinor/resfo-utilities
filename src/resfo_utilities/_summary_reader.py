@@ -52,7 +52,7 @@ import numpy.typing as npt
 import resfo
 import numpy as np
 
-from ._reading import validate_array, stream_name, key2str, decode_if_byte
+from ._reading import validate_array, stream_name, key_to_str, decode_if_byte
 
 
 class InvalidSummaryError(ValueError):
@@ -455,14 +455,14 @@ def _read_spec(
     for i in range(num_keywords):
         summary_keywords.append(
             SummaryKeyword(
-                summary_variable=key2str(keywords[i]),
+                summary_variable=key_to_str(keywords[i]),
                 number=optional_get(nums, i),
-                name=key2str(optional_get(wgnames, i)),
-                lgr_name=key2str(optional_get(lgr_names, i)),
+                name=key_to_str(optional_get(wgnames, i)),
+                lgr_name=key_to_str(optional_get(lgr_names, i)),
                 li=optional_get(numlx, i),
                 lj=optional_get(numly, i),
                 lk=optional_get(numlz, i),
-                unit=key2str(optional_get(units, i)),
+                unit=key_to_str(optional_get(units, i)),
             )
         )
 

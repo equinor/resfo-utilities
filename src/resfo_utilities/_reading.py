@@ -28,14 +28,14 @@ def decode_if_byte(key: bytes | str) -> str:
 
 
 @overload
-def key2str(key: bytes | str) -> str: ...
+def key_to_str(key: bytes | str) -> str: ...
 
 
 @overload
-def key2str(key: None) -> None: ...
+def key_to_str(key: None) -> None: ...
 
 
-def key2str(key: bytes | str | None) -> str | None:
+def key_to_str(key: bytes | str | None) -> str | None:
     if key is None:
         return None
     return decode_if_byte(key).strip()

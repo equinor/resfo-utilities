@@ -34,7 +34,7 @@ from pathlib import Path
 import resfo
 from enum import StrEnum
 from functools import partial
-from ._reading import validate_array, stream_name, key2str
+from ._reading import validate_array, stream_name, key_to_str
 
 
 class InvalidRFTError(ValueError):
@@ -302,7 +302,7 @@ class RFTReader(Iterable[RFTEntry]):
                     date = datetime.date(
                         day=date_array[0], month=date_array[1], year=date_array[2]
                     )
-                    well_etc = [key2str(v) for v in values[1]]
+                    well_etc = [key_to_str(v) for v in values[1]]
                     del well_etc[11]  # always blank
                     # Set lgr_name to None if empty
                     well_etc[2] = None if not well_etc[2] else well_etc[2]
