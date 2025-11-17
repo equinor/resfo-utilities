@@ -84,19 +84,19 @@ class RFTEntry(Mapping[str, npt.NDArray[Any]]):
         date: datetime.date,
         connections: np.ndarray[tuple[int, int], np.dtype[np.int32]],
         well: str,
-        lgr_name: str | None,
-        depth_units: str,
-        pressure_units: str,
-        types_of_data: Container[RFTDataCategory],
-        type_of_well: TypeOfWell,
-        liquid_flow_rate_units: str,
-        gas_flow_rate_units: str,
-        local_volumetric_flow_rate_units: str,
-        flow_velocity_units: str,
-        liquid_and_gas_viscosity_units: str,
-        polymer_and_brine_concentration_units: str,
-        polymer_and_brine_flow_rate_units: str,
-        absorbed_polymer_concentration_units: str,
+        lgr_name: str | None = None,
+        depth_units: str | None = None,
+        pressure_units: str | None = None,
+        types_of_data: Container[RFTDataCategory] | None = None,
+        type_of_well: TypeOfWell | None = None,
+        liquid_flow_rate_units: str | None = None,
+        gas_flow_rate_units: str | None = None,
+        local_volumetric_flow_rate_units: str | None = None,
+        flow_velocity_units: str | None = None,
+        liquid_and_gas_viscosity_units: str | None = None,
+        polymer_and_brine_concentration_units: str | None = None,
+        polymer_and_brine_flow_rate_units: str | None = None,
+        absorbed_polymer_concentration_units: str | None = None,
     ) -> None:
         self._time_since_start = time_since_start
         self._date = date
@@ -142,62 +142,62 @@ class RFTEntry(Mapping[str, npt.NDArray[Any]]):
         return self._lgr_name
 
     @property
-    def depth_units(self) -> str:
+    def depth_units(self) -> str | None:
         """Units for depth measurements."""
         return self._depth_units
 
     @property
-    def pressure_units(self) -> str:
+    def pressure_units(self) -> str | None:
         """Units for pressure measurements."""
         return self._pressure_units
 
     @property
-    def types_of_data(self) -> Container[RFTDataCategory]:
+    def types_of_data(self) -> Container[RFTDataCategory] | None:
         """Types of test data (RFT, PLT, and/or SEGMENT)."""
         return self._types_of_data
 
     @property
-    def type_of_well(self) -> str:
+    def type_of_well(self) -> str | None:
         """Well completion type (STANDARD or MULTI_SEGMENT)."""
         return self._type_of_well
 
     @property
-    def liquid_flow_rate_units(self) -> str:
+    def liquid_flow_rate_units(self) -> str | None:
         """Units for liquid flow rates."""
         return self._liquid_flow_rate_units
 
     @property
-    def gas_flow_rate_units(self) -> str:
+    def gas_flow_rate_units(self) -> str | None:
         """Units for gas flow rates."""
         return self._gas_flow_rate_units
 
     @property
-    def local_volumetric_flow_rate_units(self) -> str:
+    def local_volumetric_flow_rate_units(self) -> str | None:
         """Units for local volumetric flow rates."""
         return self._local_volumetric_flow_rate_units
 
     @property
-    def flow_velocity_units(self) -> str:
+    def flow_velocity_units(self) -> str | None:
         """Units for flow velocity."""
         return self._flow_velocity_units
 
     @property
-    def liquid_and_gas_viscosity_units(self) -> str:
+    def liquid_and_gas_viscosity_units(self) -> str | None:
         """Units for liquid and gas viscosity."""
         return self._liquid_and_gas_viscosity_units
 
     @property
-    def polymer_and_brine_concentration_units(self) -> str:
+    def polymer_and_brine_concentration_units(self) -> str | None:
         """Units for polymer and brine concentration."""
         return self._polymer_and_brine_concentration_units
 
     @property
-    def polymer_and_brine_flow_rate_units(self) -> str:
+    def polymer_and_brine_flow_rate_units(self) -> str | None:
         """Units for polymer and brine flow rates."""
         return self._polymer_and_brine_flow_rate_units
 
     @property
-    def absorbed_polymer_concentration_units(self) -> str:
+    def absorbed_polymer_concentration_units(self) -> str | None:
         """Units for absorbed polymer concentration."""
         return self._absorbed_polymer_concentration_units
 
@@ -305,9 +305,11 @@ class RFTReader(Iterable[RFTEntry]):
                         day=date_array[0], month=date_array[1], year=date_array[2]
                     )
                     well_etc = [key_to_str(v) for v in values[1]]
-                    del well_etc[11]  # always blank
-                    # Set lgr_name to None if empty
-                    well_etc[2] = None if not well_etc[2] else well_etc[2]
+                    if len(well_etc) > 11:
+                        del well_etc[11]  # always blank
+                    if len(well_etc) > 2:
+                        # Set lgr_name to None if empty
+                        well_etc[2] = None if not well_etc[2] else well_etc[2]
                     time_units = _TimeUnit(well_etc[0])
                     time_since_start = time_units.make_delta(float(time_array[0]))
                     entry = RFTEntry(
