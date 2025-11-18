@@ -15,17 +15,17 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
 }
 nitpick_ignore = [
-    ("py:class", "np.float32"),
-    ("py:class", "numpy.float32"),
-    ("py:class", "numpy.int32"),
-    ("py:class", "collections.abc.Buffer"),
-    ("py:class", "npt.ArrayLike"),
     ("py:class", "ArrayLike"),
-    ("py:class", "npt.NDArray"),
-    ("py:class", "np.bool_"),
-    ("py:class", "hypothesis.strategies.SearchStrategy"),
     ("py:class", "annotated_types.Gt"),
     ("py:class", "annotated_types.Interval"),
+    ("py:class", "collections.abc.Buffer"),
+    ("py:class", "hypothesis.strategies.SearchStrategy"),
+    ("py:class", "np.bool_"),
+    ("py:class", "np.float32"),
+    ("py:class", "npt.ArrayLike"),
+    ("py:class", "npt.NDArray"),
+    ("py:class", "numpy.float32"),
+    ("py:class", "numpy.int32"),
     ("py:class", "resfo.format.Format"),
 ]
 language = "python"
