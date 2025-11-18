@@ -24,8 +24,10 @@ nitpick_ignore = [
     ("py:class", "np.float32"),
     ("py:class", "npt.ArrayLike"),
     ("py:class", "npt.NDArray"),
+    ("py:class", "numpy.dtype"),
     ("py:class", "numpy.float32"),
     ("py:class", "numpy.int32"),
+    ("py:class", "numpy.ndarray"),
     ("py:class", "resfo.format.Format"),
 ]
 language = "python"
