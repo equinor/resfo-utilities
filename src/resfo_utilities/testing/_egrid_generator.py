@@ -406,17 +406,17 @@ def _global_grids(draw: st.DrawFn) -> GlobalGrid:
 egrids = st.builds(EGrid, _file_heads, global_grid=_global_grids())
 
 __all__ = [
+    "CoordinateType",
+    "EGrid",
+    "Filehead",
+    "GlobalGrid",
     "GrdeclKeyword",
-    "Units",
+    "GridFormat",
+    "GridHead",
     "GridRelative",
     "GridUnit",
-    "CoordinateType",
-    "TypeOfGrid",
     "RockModel",
-    "GridFormat",
-    "Filehead",
-    "GridHead",
-    "GlobalGrid",
-    "EGrid",
+    "TypeOfGrid",
+    "Units",
     "egrids",
 ]

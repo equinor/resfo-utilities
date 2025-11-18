@@ -275,11 +275,11 @@ def make_summary_key(
 T = TypeVar("T")
 
 __all__ = [
+    "InvalidSummaryKeyError",
     "SummaryKeyType",
     "history_key",
     "is_rate",
     "make_summary_key",
-    "InvalidSummaryKeyError",
 ]
 
 
