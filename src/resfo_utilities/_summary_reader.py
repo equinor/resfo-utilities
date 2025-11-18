@@ -542,10 +542,7 @@ ANY_SUMMARY_EXTENSION = r"unsmry|smspec|funsmry|fsmspec|s\d\d\d\d|a\d\d\d\d"
 
 def _get_summary_filenames(filepath: str | os.PathLike[str]) -> tuple[list[str], str]:
     directory, file_name = os.path.split(filepath)
-    if "." in file_name:
-        case_name = ".".join(file_name.split(".")[:-1])
-    else:
-        case_name = file_name
+    case_name = ".".join(file_name.split(".")[:-1]) if "." in file_name else file_name
     specified_formatted = _has_extension(file_name, r"funsmry|fsmspec|a\d\d\d\d")
     specified_unformatted = _has_extension(file_name, r"unsmry|smspec|s\d\d\d\d")
     specified_unified = _has_extension(file_name, "funsmry")

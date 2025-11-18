@@ -162,12 +162,12 @@ class CornerpointGrid:
             if isinstance(file_like, str):
                 filename = file_like
                 mode = "rt" if filename.lower().endswith("fegrid") else "rb"
-                stream = open(filename, mode=mode)
+                stream = open(filename, mode=mode)  # noqa: SIM115
                 opened = True
             elif isinstance(file_like, os.PathLike):
                 filename = str(file_like)
                 mode = "rt" if filename.lower().endswith("fegrid") else "rb"
-                stream = open(filename, mode=mode)
+                stream = open(filename, mode=mode)  # noqa: SIM115
                 opened = True
             else:
                 filename = getattr(file_like, "name", "unknown stream")

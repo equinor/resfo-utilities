@@ -349,10 +349,7 @@ def smspecs(
     """Hypothesis strategy for ``Smspec`` s."""
     use_days = st.booleans() if use_days is None else use_days
     use_locals = draw(st.booleans())
-    if sum_keys is None:
-        sum_keys_ = draw(_summary_keys)
-    else:
-        sum_keys_ = draw(sum_keys)
+    sum_keys_ = draw(_summary_keys) if sum_keys is None else draw(sum_keys)
     if any(sk.startswith("L") for sk in sum_keys_):
         use_locals = True
     n = len(sum_keys_) + 1

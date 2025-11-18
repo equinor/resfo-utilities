@@ -56,6 +56,11 @@ dev = [
 src = ["src"]
 line-length = 88
 
+[tool.ruff.lint]
+select = [
+    "SIM",    # flake8-simplify
+]
+
 [tool.pytest.ini_options]
 addopts = "-ra --strict-markers"
 

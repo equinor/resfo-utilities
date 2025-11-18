@@ -294,7 +294,6 @@ def test_that_reader_handles_multiple_data_arrays():
 
 def test_that_context_manager_closes_stream_on_exception():
     buffer = write_rft_to_buffer([("TIME", np.array([1.0]))])
-    with pytest.raises(InvalidRFTError):
-        with RFTReader(buffer) as reader:
-            list(reader)
+    with pytest.raises(InvalidRFTError), RFTReader(buffer) as reader:
+        list(reader)
     assert buffer.closed

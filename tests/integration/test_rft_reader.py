@@ -25,7 +25,7 @@ def test_that_we_can_read_the_eightcells_grid_from_the_simulator(
                 connections = entry.connections
                 # entry["PRESSURE"] is the raw array from the file
                 pressure = entry["PRESSURE"]
-                assert "PRESSURE" in entry.keys()
+                assert "PRESSURE" in entry
                 _ = pressure[np.argmin(connections[:, 2])]
                 brine_concentration = entry.get("CBRI", None)
                 assert brine_concentration is None
