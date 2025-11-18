@@ -40,8 +40,8 @@ See `OPM Flow manual`_ section F for details.
 
 from dataclasses import dataclass
 import os
-from collections.abc import Iterable, Iterator
-from typing import Any, IO, overload, Callable, TypeAlias
+from collections.abc import Iterable, Iterator, Callable
+from typing import Any, IO, overload, TypeAlias
 from datetime import datetime
 from itertools import tee
 import re

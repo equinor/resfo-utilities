@@ -58,6 +58,7 @@ line-length = 88
 
 [tool.ruff.lint]
 select = [
+    "UP",     # pyupgrade
     "RUF",    # ruff specific rules
     "SIM",    # flake8-simplify
 ]

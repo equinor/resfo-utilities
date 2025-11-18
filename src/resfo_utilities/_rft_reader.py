@@ -24,7 +24,8 @@ Typical usage example::
 
 from __future__ import annotations
 import os
-from typing import Any, IO, Self, Iterator, assert_never
+from collections.abc import Iterator
+from typing import Any, IO, Self, assert_never
 from collections.abc import Iterable, Mapping, Container
 import numpy as np
 import numpy.typing as npt
@@ -249,12 +250,12 @@ class RFTReader(Iterable[RFTEntry]):
         if file_path.suffix == ".RFT":
             return cls(open(file_path, "rb"))
         if file_path.suffix == ".FRFT":
-            return cls(open(file_path, "rt"))
+            return cls(open(file_path))
         basename = file_path.parent / file_path.stem
         if (f := basename.with_suffix(".RFT")).exists():
             return cls(open(f, "rb"))
         if (f := basename.with_suffix(".FRFT")).exists():
-            return cls(open(f, "rt"))
+            return cls(open(f))
         raise FileNotFoundError(f"Could not find any RFT file matching '{file_like}'")
 
     def __iter__(self) -> Iterator[RFTEntry]:

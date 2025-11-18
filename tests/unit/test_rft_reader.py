@@ -192,19 +192,17 @@ def test_that_lgr_name_is_not_none_when_input_contains_non_space():
 def test_that_optional_well_etc_fields_are_set_to_none_if_not_present():
     node = next(
         iter(
-            (
-                RFTReader(
-                    write_rft_to_buffer(
-                        [
-                            ("TIME", np.array([24.0])),
-                            ("DATE", np.array([1, 1, 2000])),
-                            ("WELLETC", np.array([b"HOURS   ", b"WELL1   "])),
-                            ("CONIPOS", np.array([1, 2])),
-                            ("CONJPOS", np.array([1, 1])),
-                            ("CONKPOS", np.array([1, 2])),
-                            ("PRESSURE", np.array([100.0, 200.0])),
-                        ]
-                    )
+            RFTReader(
+                write_rft_to_buffer(
+                    [
+                        ("TIME", np.array([24.0])),
+                        ("DATE", np.array([1, 1, 2000])),
+                        ("WELLETC", np.array([b"HOURS   ", b"WELL1   "])),
+                        ("CONIPOS", np.array([1, 2])),
+                        ("CONJPOS", np.array([1, 1])),
+                        ("CONKPOS", np.array([1, 2])),
+                        ("PRESSURE", np.array([100.0, 200.0])),
+                    ]
                 )
             )
         )

@@ -20,7 +20,8 @@ coordinate system is represented by :py:class:`resfo_utilities.MapAxes`.
 
 from __future__ import annotations
 import os
-from typing import Self, Any, IO, TypeVar, Callable
+from collections.abc import Callable
+from typing import Self, Any, IO, TypeVar
 from dataclasses import dataclass
 from numpy import typing as npt
 import numpy as np
