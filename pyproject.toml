@@ -9,7 +9,6 @@ readme = "README.md"
 requires-python = ">=3.11, <=3.14"
 classifiers=[
     "Development Status :: 1 - Planning",
-    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -26,9 +25,7 @@ maintainers = [
     {name="Eivind Jahren", email="ejah@equinor.com"},
     {name="Håkon Steinkopf Søhoel", email="hsoho@equinor.com"},
 ]
-
-[project.license]
-text = "LGPL-3.0"
+license = "LGPL-3.0-or-later"
 
 [project.urls]
 "Homepage" = "https://github.com/equinor/resfo-utilities"
