@@ -9,7 +9,7 @@ from pytest import approx
 def test_that_we_can_read_the_eightcells_grid_from_the_simulator(
     tmp_path: Path, simulator_cmd: list[str]
 ) -> None:
-    subprocess.run(simulator_cmd + [str(tmp_path / "EIGHTCELLS")])
+    subprocess.run([*simulator_cmd, str(tmp_path / "EIGHTCELLS")])
 
     grid = CornerpointGrid.read_egrid(str(tmp_path / "EIGHTCELLS.EGRID"))
 

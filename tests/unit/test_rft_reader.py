@@ -111,7 +111,7 @@ def test_that_reader_raises_invalid_rft_error_when_first_keyword_is_not_time():
 def test_that_reader_raises_invalid_rft_error_when_time_is_mess():
     buffer = write_rft_to_buffer([("TIME    ", resfo.MESS)])
     reader = RFTReader(buffer)
-    with pytest.raises(InvalidRFTError, match="TIME.*incorrect type MESS"):
+    with pytest.raises(InvalidRFTError, match=r"TIME.*incorrect type MESS"):
         list(reader)
 
 
@@ -145,62 +145,70 @@ def test_that_reader_can_read_minimal_valid_rft_entry():
 
 def test_that_lgr_name_is_none_if_spaces_only():
     assert (
-        list(
-            RFTReader(
-                write_rft_to_buffer(
-                    [
-                        ("TIME", np.array([24.0])),
-                        ("DATE", np.array([1, 1, 2000])),
-                        ("WELLETC", well_etc(lgr_name=b"        ")),
-                        ("CONIPOS", np.array([1, 2])),
-                        ("CONJPOS", np.array([1, 1])),
-                        ("CONKPOS", np.array([1, 2])),
-                        ("PRESSURE", np.array([100.0, 200.0])),
-                    ]
+        next(
+            iter(
+                RFTReader(
+                    write_rft_to_buffer(
+                        [
+                            ("TIME", np.array([24.0])),
+                            ("DATE", np.array([1, 1, 2000])),
+                            ("WELLETC", well_etc(lgr_name=b"        ")),
+                            ("CONIPOS", np.array([1, 2])),
+                            ("CONJPOS", np.array([1, 1])),
+                            ("CONKPOS", np.array([1, 2])),
+                            ("PRESSURE", np.array([100.0, 200.0])),
+                        ]
+                    )
                 )
             )
-        )[0].lgr_name
+        ).lgr_name
         is None
     )
 
 
 def test_that_lgr_name_is_not_none_when_input_contains_non_space():
     assert (
-        list(
-            RFTReader(
-                write_rft_to_buffer(
-                    [
-                        ("TIME", np.array([24.0])),
-                        ("DATE", np.array([1, 1, 2000])),
-                        ("WELLETC", well_etc(lgr_name=b"LGRNAME ")),
-                        ("CONIPOS", np.array([1, 2])),
-                        ("CONJPOS", np.array([1, 1])),
-                        ("CONKPOS", np.array([1, 2])),
-                        ("PRESSURE", np.array([100.0, 200.0])),
-                    ]
+        next(
+            iter(
+                RFTReader(
+                    write_rft_to_buffer(
+                        [
+                            ("TIME", np.array([24.0])),
+                            ("DATE", np.array([1, 1, 2000])),
+                            ("WELLETC", well_etc(lgr_name=b"LGRNAME ")),
+                            ("CONIPOS", np.array([1, 2])),
+                            ("CONJPOS", np.array([1, 1])),
+                            ("CONKPOS", np.array([1, 2])),
+                            ("PRESSURE", np.array([100.0, 200.0])),
+                        ]
+                    )
                 )
             )
-        )[0].lgr_name
+        ).lgr_name
         == "LGRNAME"
     )
 
 
 def test_that_optional_well_etc_fields_are_set_to_none_if_not_present():
-    node = list(
-        RFTReader(
-            write_rft_to_buffer(
-                [
-                    ("TIME", np.array([24.0])),
-                    ("DATE", np.array([1, 1, 2000])),
-                    ("WELLETC", np.array([b"HOURS   ", b"WELL1   "])),
-                    ("CONIPOS", np.array([1, 2])),
-                    ("CONJPOS", np.array([1, 1])),
-                    ("CONKPOS", np.array([1, 2])),
-                    ("PRESSURE", np.array([100.0, 200.0])),
-                ]
+    node = next(
+        iter(
+            (
+                RFTReader(
+                    write_rft_to_buffer(
+                        [
+                            ("TIME", np.array([24.0])),
+                            ("DATE", np.array([1, 1, 2000])),
+                            ("WELLETC", np.array([b"HOURS   ", b"WELL1   "])),
+                            ("CONIPOS", np.array([1, 2])),
+                            ("CONJPOS", np.array([1, 1])),
+                            ("CONKPOS", np.array([1, 2])),
+                            ("PRESSURE", np.array([100.0, 200.0])),
+                        ]
+                    )
+                )
             )
         )
-    )[0]
+    )
 
     assert node.lgr_name is None
     assert node.depth_units is None

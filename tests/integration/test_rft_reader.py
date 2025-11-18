@@ -10,7 +10,7 @@ import subprocess
 def test_that_we_can_read_the_eightcells_grid_from_the_simulator(
     tmp_path: Path, simulator_cmd: list[str]
 ):
-    subprocess.run(simulator_cmd + [str(tmp_path / "EIGHTCELLS")])
+    subprocess.run([*simulator_cmd, str(tmp_path / "EIGHTCELLS")])
 
     rft: RFTReader
     with RFTReader.open(tmp_path / "EIGHTCELLS") as rft:

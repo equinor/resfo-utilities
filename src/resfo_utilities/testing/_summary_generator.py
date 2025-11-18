@@ -356,7 +356,7 @@ def smspecs(
     nx = draw(_small_ints)
     ny = draw(_small_ints)
     nz = draw(_small_ints)
-    keywords = ["TIME    "] + sum_keys_
+    keywords = ["TIME    ", *sum_keys_]
     if draw(use_days):
         units = [
             "DAYS    ",
@@ -381,13 +381,16 @@ def smspecs(
         numlx = None
         numly = None
         numlz = None
-    region_numbers = [-32676] + draw(
-        st.lists(
-            from_dtype(np.dtype(np.int32), min_value=1, max_value=nx * ny * nz),
-            min_size=len(sum_keys_),
-            max_size=len(sum_keys_),
-        )
-    )
+    region_numbers = [
+        -32676,
+        *draw(
+            st.lists(
+                from_dtype(np.dtype(np.int32), min_value=1, max_value=nx * ny * nz),
+                min_size=len(sum_keys_),
+                max_size=len(sum_keys_),
+            )
+        ),
+    ]
     return draw(
         st.builds(
             Smspec,
@@ -519,7 +522,7 @@ def summaries(
     # The smspec should be unique up to summary_keys.
     # This just mimics the behavior of simulators.
     assume(len(set(smspec.summary_keys())) == len(smspec.keywords))
-    dates = [0.0] + draw(time_deltas)
+    dates = [0.0, *draw(time_deltas)]
     try:
         if days:
             _ = first_date + timedelta(days=max(dates))
