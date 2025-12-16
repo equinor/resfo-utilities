@@ -316,6 +316,7 @@ class CornerpointGrid:
             p: npt.NDArray[np.float32]
             i_neighbourhood: int
             j_neighbourhood: int
+            intersection: npt.NDArray[np.float32]
 
             @cached_property
             def vertices(self) -> npt.NDArray[np.float32]:
@@ -343,26 +344,52 @@ class CornerpointGrid:
                 y_dist = max(min_y - self.p[1], self.p[1] - max_y, 0)
                 return x_dist + y_dist
 
+            @cached_property
+            def distance_intersection_center(self) -> np.float32:
+                corners = np.array(
+                    [
+                        self.intersection[self.i, self.j],
+                        self.intersection[self.i + 1, self.j],
+                        self.intersection[self.i + 1, self.j + 1],
+                        self.intersection[self.i, self.j + 1],
+                    ]
+                )
+                center_x, center_y = corners.mean(axis=0)
+                x_dist = abs(center_x - self.p[0])
+                y_dist = abs(center_y - self.p[1])
+                return x_dist + y_dist
+
             def __lt__(self, other: object) -> bool:
                 """Used to order elements in the search queue.
 
-                The Quads are ordered by distance_from_bounds.
+                The Quads are ordered by distance_intersection_center.
                 """
                 if not isinstance(other, Quad):
                     return False
-                return bool(self.distance_from_bounds < other.distance_from_bounds)
+                return bool(
+                    self.distance_intersection_center
+                    < other.distance_intersection_center
+                )
 
         if dims[0] <= 0 or dims[1] <= 0:
             return [None] * len(points)
 
         for p in points:
+            intersection = self._pillars_z_plane_intersection(p[2])
             found = False
             if prev_ij is None:
                 queue = [
-                    Quad(dims[0] // 2, dims[1] // 2, p, dims[0] // 2, dims[1] // 2)
+                    Quad(
+                        dims[0] // 2,
+                        dims[1] // 2,
+                        p,
+                        dims[0] // 2,
+                        dims[1] // 2,
+                        intersection,
+                    )
                 ]
             else:
-                queue = [Quad(*prev_ij, p, 1, 1)]
+                queue = [Quad(*prev_ij, p, 1, 1, intersection)]
             visited = set([(queue[0].i, queue[0].j)])
             while queue:
                 node = heapq.heappop(queue)
@@ -411,6 +438,7 @@ class CornerpointGrid:
                                     p,
                                     max(size_i // 2, 1),
                                     max(size_j // 2, 1),
+                                    intersection,
                                 ),
                             )
                             visited.add((ni, nj))
