@@ -59,9 +59,42 @@ line-length = 88
 
 [tool.ruff.lint]
 select = [
+    "AIR",
+    "ARG",
+    "ASYNC",
+    "BLE",
+    "CPY",
+    "DJ",
+    "DOC",
+    "ERA",
+    "EXE",
+    "F",
+    "FA",
+    "FAST",
+    "FIX",
+    "FLY",
+    "FURB",
+    "G",
+    "ICN",
+    "INT",
+    "LOG",
+    "NPY",
+    "PD",
+    "PIE",
+    "PLC",
+    "PLE",
+    "PYI",
+    "Q",
+    "RSE",
     "RUF",    # ruff specific rules
     "SIM",    # flake8-simplify
+    "SLOT",
+    "T",
+    "TD",
+    "TID",
     "UP",     # pyupgrade
+    "W",
+    "YTT",
 ]
 
 [tool.pytest.ini_options]
