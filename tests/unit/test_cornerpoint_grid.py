@@ -59,7 +59,7 @@ def test_that_read_egrid_raises_invalid_egrid_file_the_coordinate_system_is_radi
         CornerpointGrid.read_egrid(write_to_buffer([("GRIDHEAD", grid_head_array)]))
 
 
-def test_that_read_egrid_warns_when_the_global_grid_does_not_have_reference_number_zero():
+def test_that_read_egrid_warns_when_the_global_grid_does_not_have_reference_number_zero():  # noqa: E501
     with pytest.warns(UserWarning, match="reference number 1, expected 0"):
         CornerpointGrid.read_egrid(
             write_to_buffer(
@@ -192,7 +192,8 @@ def test_that_read_egrid_fetches_the_geometry_from_the_global_grid_in_the_file(
     # coordinate data set (or reservoir). For multiple reservoirs, where
     # NUMRES is greater than one, there must be 6 x (NX+1) x (NY+1) x NUMRES values.
     # For Cartesian geometry, each line is defined by the (x, y, z) coordinates of
-    # two distinct points on the line. The lines are entered with I cycling fastest then J."
+    # two distinct points on the line. The lines are entered with I cycling fastest
+    # then J."
     assert grid.coord.tolist() == [
         [
             [[0.0, 1.0, 2.0], [3.0, 4.0, 5.0]],  # Top and base points for i,j=0,0

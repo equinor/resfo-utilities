@@ -194,7 +194,7 @@ def write_resfo_buf(arrays):
     return buf
 
 
-def test_that_when_case_path_is_formatted_then_formatted_files_are_chosen_over_unformatted(
+def test_that_when_case_path_is_formatted_then_formatted_files_are_chosen_over_unformatted(  # noqa: E501
     tmp_path: Path,
 ):
     resfo.write(tmp_path / "CASE.FSMSPEC", minimal_smspec(), resfo.Format.FORMATTED)
@@ -212,7 +212,7 @@ def test_that_when_case_path_is_formatted_then_formatted_files_are_chosen_over_u
     assert list(reader.summary_filenames) == [str(tmp_path / "CASE.FUNSMRY")]
 
 
-def test_that_case_path_without_extension_warns_on_multiple_summary_types_and_picks_first(
+def test_that_case_path_without_extension_warns_on_multiple_summary_types_and_picks_first(  # noqa: E501
     tmp_path: Path,
 ):
     resfo.write(

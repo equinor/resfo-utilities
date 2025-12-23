@@ -68,6 +68,7 @@ select = [
     "CPY",
     "DJ",
     "DOC",
+    "E",
     "ERA",
     "EXE",
     "F",

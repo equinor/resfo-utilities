@@ -29,7 +29,10 @@ or the ``summaries`` generator::
         smspec_buf.seek(0)
         unsmry_buf.seek(0)
 
-        summary = SummaryReader(smspec=lambda: smspec_buf, summaries=[lambda: unsmry_buf])
+        summary = SummaryReader(
+            smspec=lambda: smspec_buf,
+            summaries=[lambda: unsmry_buf]
+            )
 """
 
 from ._egrid_generator import (

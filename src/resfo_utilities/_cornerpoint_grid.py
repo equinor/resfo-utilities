@@ -102,7 +102,8 @@ class CornerpointGrid:
             the 8 corners of the cell at i,j,k. The order of the corner z values
             are as follows:
             [TSW, TSE, TNW, TNE, BSW, BSE, BNW, BNE] where N(orth) means higher y,
-            E(east) means higher x, T(op) means lower z (when z is interpreted as depth).
+            E(east) means higher x, T(op) means lower z (when z is interpreted as
+            depth).
 
         map_axes:
             Optionally each point is interpreted to be relative to some map
