@@ -63,6 +63,7 @@ select = [
     "AIR",
     "ARG",
     "ASYNC",
+    "B",
     "BLE",
     "CPY",
     "DJ",

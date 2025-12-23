@@ -213,7 +213,8 @@ class CornerpointGrid:
                                 f"The global grid in {filename} had "
                                 f"reference number {reference_number}, expected 0."
                                 " This could indicate that the grid being read"
-                                " is actually an LGR grid."
+                                " is actually an LGR grid.",
+                                stacklevel=2,
                             )
                         if optional_get(array, 26) not in {0, None}:
                             raise InvalidEgridFileError(

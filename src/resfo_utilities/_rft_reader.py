@@ -339,7 +339,7 @@ class RFTReader(Iterable[RFTEntry]):
                 if incomplete_entry:
                     raise InvalidRFTError(
                         f"Reached end-of-file while reading entry in {self._name}"
-                    )
+                    ) from None
 
         return inner()
 

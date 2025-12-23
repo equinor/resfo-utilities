@@ -276,7 +276,9 @@ class SummaryReader:
                 with smry_opener() as smry:
                     summary_name = stream_name(smry)
 
-                    def read_params() -> Iterator[npt.NDArray[np.float32]]:
+                    def read_params(
+                        summary_name: str,
+                    ) -> Iterator[npt.NDArray[np.float32]]:
                         nonlocal last_params
                         if last_params is not None:
                             vals = _validate_array(
@@ -288,12 +290,12 @@ class SummaryReader:
                     for entry in resfo.lazy_read(smry):
                         kw = entry.read_keyword()
                         if last_params and not report_step_only:
-                            yield from read_params()
+                            yield from read_params(summary_name)
                         if kw == "PARAMS  ":
                             last_params = entry
                         if report_step_only and kw == "SEQHDR  ":
-                            yield from read_params()
-                    yield from read_params()
+                            yield from read_params(summary_name)
+                    yield from read_params(summary_name)
         except OSError as err:
             raise InvalidSummaryError(
                 f"Could not read from summary file {err.filename}: {err.strerror}"
@@ -434,12 +436,14 @@ def _read_spec(
         num_keywords = len(keywords)
         warnings.warn(
             "SMSPEC did not contain num_keywords in DIMENS."
-            f" Using length of KEYWORDS: {num_keywords}."
+            f" Using length of KEYWORDS: {num_keywords}.",
+            stacklevel=2,
         )
     elif num_keywords > len(keywords):
         warnings.warn(
             f"number of keywords given in DIMENS {num_keywords} is larger than the "
             f"length of KEYWORDS {len(keywords)}, truncating size to match.",
+            stacklevel=2,
         )
         num_keywords = len(keywords)
 
@@ -582,7 +586,10 @@ def _get_summary_filenames(filepath: str | os.PathLike[str]) -> tuple[list[str],
             break
 
     if len(summary) != len(all_summary):
-        warnings.warn(f"More than one type of summary file, found {all_summary}")
+        warnings.warn(
+            f"More than one type of summary file, found {all_summary}",
+            stacklevel=2,
+        )
     if not summary:
         raise FileNotFoundError(f"Could not find any summary files matching {filepath}")
 
@@ -593,7 +600,10 @@ def _get_summary_filenames(filepath: str | os.PathLike[str]) -> tuple[list[str],
 
     spec = list(spec_candidates)
     if len(spec) > 1:
-        warnings.warn(f"More than one type of summary spec file, found {spec}")
+        warnings.warn(
+            f"More than one type of summary spec file, found {spec}",
+            stacklevel=2,
+        )
 
     if not spec:
         raise FileNotFoundError(f"Could not find any summary spec matching {filepath}")
