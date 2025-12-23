@@ -1,5 +1,5 @@
 project = "resfo-utilities"
-copyright = "2022, Equinor"
+copyright = "2022, Equinor"  # noqa: A001
 author = "Equinor"
 release = "1.0.0"
 
