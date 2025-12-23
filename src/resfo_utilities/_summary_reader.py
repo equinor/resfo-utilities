@@ -447,8 +447,6 @@ def _read_spec(
         )
         num_keywords = len(keywords)
 
-    summary_keywords: list[SummaryKeyword] = []
-
     def optional_get(arr: npt.NDArray[Any] | None, idx: int) -> Any:
         if arr is None:
             return None
@@ -456,19 +454,19 @@ def _read_spec(
             return None
         return arr[idx]
 
-    for i in range(num_keywords):
-        summary_keywords.append(
-            SummaryKeyword(
-                summary_variable=key_to_str(keywords[i]),
-                number=optional_get(nums, i),
-                name=key_to_str(optional_get(wgnames, i)),
-                lgr_name=key_to_str(optional_get(lgr_names, i)),
-                li=optional_get(numlx, i),
-                lj=optional_get(numly, i),
-                lk=optional_get(numlz, i),
-                unit=key_to_str(optional_get(units, i)),
-            )
+    summary_keywords = [
+        SummaryKeyword(
+            summary_variable=key_to_str(keywords[i]),
+            number=optional_get(nums, i),
+            name=key_to_str(optional_get(wgnames, i)),
+            lgr_name=key_to_str(optional_get(lgr_names, i)),
+            li=optional_get(numlx, i),
+            lj=optional_get(numly, i),
+            lk=optional_get(numlz, i),
+            unit=key_to_str(optional_get(units, i)),
         )
+        for i in range(num_keywords)
+    ]
 
     restart_arr = arrays["RESTART "]
     restart = None

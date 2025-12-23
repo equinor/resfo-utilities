@@ -82,6 +82,7 @@ select = [
     "LOG",
     "NPY",
     "PD",
+    "PERF",
     "PIE",
     "PLC",
     "PLE",
