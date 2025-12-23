@@ -1,8 +1,10 @@
-import pytest
-from pathlib import Path
 import subprocess
-from resfo_utilities import CornerpointGrid, MapAxes
+from pathlib import Path
+
+import pytest
 from pytest import approx
+
+from resfo_utilities import CornerpointGrid, MapAxes
 
 
 @pytest.mark.usefixtures("eightcells")

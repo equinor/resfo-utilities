@@ -1,8 +1,9 @@
-import hypothesis.strategies as st
-from hypothesis import given
 from datetime import datetime
 
-from resfo_utilities.testing import smspecs, summaries, Date
+import hypothesis.strategies as st
+from hypothesis import given
+
+from resfo_utilities.testing import Date, smspecs, summaries
 
 
 @given(smspecs())

@@ -23,19 +23,21 @@ Typical usage example::
 """
 
 from __future__ import annotations
-import os
-from collections.abc import Iterator
-from typing import Any, IO, Self, assert_never
-from collections.abc import Iterable, Mapping, Container
-import numpy as np
-import numpy.typing as npt
+
 import datetime
-from types import TracebackType
-from pathlib import Path
-import resfo
+import os
+from collections.abc import Container, Iterable, Iterator, Mapping
 from enum import StrEnum
 from functools import partial
-from ._reading import validate_array, stream_name, key_to_str
+from pathlib import Path
+from types import TracebackType
+from typing import IO, Any, Self, assert_never
+
+import numpy as np
+import numpy.typing as npt
+import resfo
+
+from ._reading import key_to_str, stream_name, validate_array
 
 
 class InvalidRFTError(ValueError):

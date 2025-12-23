@@ -38,21 +38,22 @@ See `OPM Flow manual`_ section F for details.
 .. _OPM Flow manual: https://opm-project.org/wp-content/uploads/2023/06/OPM_Flow_Reference_Manual_2023-04_Rev-0_Reduced.pdf
 """
 
-from dataclasses import dataclass
 import os
-from collections.abc import Iterable, Iterator, Callable
-from typing import Any, IO, overload, TypeAlias
-from datetime import datetime
-from itertools import tee
 import re
-from functools import partial
 import warnings
-from natsort import natsorted
+from collections.abc import Callable, Iterable, Iterator
+from dataclasses import dataclass
+from datetime import datetime
+from functools import partial
+from itertools import tee
+from typing import IO, Any, TypeAlias, overload
+
+import numpy as np
 import numpy.typing as npt
 import resfo
-import numpy as np
+from natsort import natsorted
 
-from ._reading import validate_array, stream_name, key_to_str, decode_if_byte
+from ._reading import decode_if_byte, key_to_str, stream_name, validate_array
 
 
 class InvalidSummaryError(ValueError):

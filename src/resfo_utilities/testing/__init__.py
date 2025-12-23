@@ -36,32 +36,31 @@ or the ``summaries`` generator::
 """
 
 from ._egrid_generator import (
-    Units,
+    CoordinateType,
+    EGrid,
+    Filehead,
+    GlobalGrid,
+    GridFormat,
+    GridHead,
     GridRelative,
     GridUnit,
-    CoordinateType,
-    TypeOfGrid,
     RockModel,
-    GridFormat,
-    Filehead,
-    GridHead,
-    GlobalGrid,
-    EGrid,
+    TypeOfGrid,
+    Units,
     egrids,
 )
-
 from ._summary_generator import (
-    summary_variables,
-    UnitSystem,
-    Simulator,
-    SmspecIntehead,
     Date,
+    Simulator,
     Smspec,
-    smspecs,
+    SmspecIntehead,
     SummaryMiniStep,
     SummaryStep,
+    UnitSystem,
     Unsmry,
+    smspecs,
     summaries,
+    summary_variables,
 )
 
 __all__ = [

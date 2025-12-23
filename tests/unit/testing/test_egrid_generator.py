@@ -1,12 +1,12 @@
-from resfo_utilities.testing import GlobalGrid
-from hypothesis import given
 import hypothesis.strategies as st
 import numpy as np
+from hypothesis import given
 
 from resfo_utilities.testing import (
-    Filehead,
-    GridHead,
     EGrid,
+    Filehead,
+    GlobalGrid,
+    GridHead,
     TypeOfGrid,
     egrids,
 )

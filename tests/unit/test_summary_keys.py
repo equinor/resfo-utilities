@@ -2,7 +2,7 @@ import hypothesis.strategies as st
 import pytest
 from hypothesis import given
 
-from resfo_utilities import SummaryKeyType, make_summary_key, is_rate
+from resfo_utilities import SummaryKeyType, is_rate, make_summary_key
 from resfo_utilities.testing._summary_generator import _inter_region_summary_variables
 
 DUMMY_NAME = ":+:+:+:+"

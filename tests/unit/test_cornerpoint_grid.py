@@ -1,19 +1,21 @@
+from io import BytesIO
+from itertools import product
+
+import hypothesis.strategies as st
+import numpy as np
+import pytest
+import resfo
+from hypothesis import assume, example, given
+from hypothesis.extra.numpy import arrays, from_dtype
+from numpy.testing import assert_allclose
+
 from resfo_utilities import (
     CornerpointGrid,
     InvalidEgridFileError,
-    MapAxes,
     InvalidGridError,
+    MapAxes,
 )
 from resfo_utilities.testing import egrids
-import resfo
-import pytest
-from io import BytesIO
-import numpy as np
-from numpy.testing import assert_allclose
-from hypothesis import given, assume, example
-import hypothesis.strategies as st
-from hypothesis.extra.numpy import arrays, from_dtype
-from itertools import product
 
 
 def write_to_buffer(file_contents):

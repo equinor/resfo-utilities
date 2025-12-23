@@ -4,25 +4,26 @@ Implements a hypothesis strategy for unified summary files
 See https://opm-project.org/?page_id=955
 """
 
+from collections.abc import Iterator
 from dataclasses import astuple, dataclass
 from datetime import datetime, timedelta
 from enum import Enum, unique
-from typing import Any, Self, IO
 from itertools import zip_longest
 from os import PathLike
+from typing import IO, Any, Self
 
 import hypothesis.strategies as st
 import numpy as np
+import numpy.typing as npt
 import resfo
 from hypothesis import assume
 from hypothesis.extra.numpy import from_dtype
 from pydantic import PositiveInt, conint
-from collections.abc import Iterator
-import numpy.typing as npt
+
+from resfo_utilities import make_summary_key
+from resfo_utilities._summary_keys import SPECIAL_KEYWORDS
 
 from ._egrid_generator import GrdeclKeyword
-from resfo_utilities._summary_keys import SPECIAL_KEYWORDS
-from resfo_utilities import make_summary_key
 
 _inter_region_summary_variables = [
     "RGFR",

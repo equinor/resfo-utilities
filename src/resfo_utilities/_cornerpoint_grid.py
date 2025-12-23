@@ -19,17 +19,19 @@ coordinate system is represented by :py:class:`resfo_utilities.MapAxes`.
 """
 
 from __future__ import annotations
+
+import heapq
 import os
+import warnings
 from collections.abc import Callable
-from typing import Self, Any, IO, TypeVar
 from dataclasses import dataclass
-from numpy import typing as npt
+from functools import cached_property
+from typing import IO, Any, Self, TypeVar
+
 import numpy as np
 import resfo
 import scipy.optimize
-import warnings
-import heapq
-from functools import cached_property
+from numpy import typing as npt
 
 
 class InvalidEgridFileError(ValueError):

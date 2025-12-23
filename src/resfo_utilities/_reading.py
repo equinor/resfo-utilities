@@ -1,6 +1,7 @@
-from typing import Any, IO, overload
-import resfo
+from typing import IO, Any, overload
+
 import numpy.typing as npt
+import resfo
 
 
 def validate_array(

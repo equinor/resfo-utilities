@@ -1,9 +1,11 @@
-import pytest
-from resfo_utilities import RFTReader, RFTEntry
-from datetime import date
-import numpy as np
-from pathlib import Path
 import subprocess
+from datetime import date
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+from resfo_utilities import RFTEntry, RFTReader
 
 
 @pytest.mark.usefixtures("eightcells")

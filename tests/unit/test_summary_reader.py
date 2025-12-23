@@ -1,14 +1,16 @@
-from resfo_utilities import SummaryReader, InvalidSummaryError
-from resfo_utilities.testing import summaries, Unsmry
-from pathlib import Path
-from io import StringIO, BytesIO
-import pytest
-from hypothesis import given
-import hypothesis.strategies as st
-from contextlib import suppress
-import resfo
-import numpy as np
 import os
+from contextlib import suppress
+from io import BytesIO, StringIO
+from pathlib import Path
+
+import hypothesis.strategies as st
+import numpy as np
+import pytest
+import resfo
+from hypothesis import given
+
+from resfo_utilities import InvalidSummaryError, SummaryReader
+from resfo_utilities.testing import Unsmry, summaries
 
 
 def test_that_summary_reader_can_be_initialized_with_either_path_or_io(tmp_path: Path):

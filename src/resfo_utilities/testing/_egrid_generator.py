@@ -45,14 +45,14 @@ to the in file representation.
 
 from dataclasses import astuple, dataclass
 from enum import Enum, auto, unique
-from typing import Any, assert_never, IO
 from os import PathLike
+from typing import IO, Any, assert_never
 
 import hypothesis.strategies as st
 import numpy as np
+import numpy.typing as npt
 import resfo
 from hypothesis.extra.numpy import arrays
-import numpy.typing as npt
 
 
 @unique

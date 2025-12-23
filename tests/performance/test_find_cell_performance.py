@@ -1,7 +1,9 @@
-from resfo_utilities import CornerpointGrid
-import numpy as np
 from itertools import product
+
+import numpy as np
 import pytest
+
+from resfo_utilities import CornerpointGrid
 
 
 @pytest.fixture

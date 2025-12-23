@@ -1,9 +1,10 @@
-import pytest
-import shutil
 import os
+import shutil
 from dataclasses import dataclass
-from textwrap import dedent, indent
 from pathlib import Path
+from textwrap import dedent, indent
+
+import pytest
 
 
 @pytest.fixture

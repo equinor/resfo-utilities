@@ -1,10 +1,12 @@
-import pytest
-from resfo_utilities import RFTReader, InvalidRFTError, RFTDataCategory
-import resfo
-from io import BytesIO
 import datetime
+from io import BytesIO
+
 import numpy as np
+import pytest
+import resfo
 from numpy.testing import assert_array_equal
+
+from resfo_utilities import InvalidRFTError, RFTDataCategory, RFTReader
 
 
 def write_rft_to_buffer(file_contents):
