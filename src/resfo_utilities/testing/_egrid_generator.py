@@ -336,7 +336,11 @@ class EGrid:
 
 
 _finites = st.floats(
-    min_value=-100.0, max_value=100.0, allow_nan=False, allow_infinity=False, width=32
+    min_value=-100.0,
+    max_value=100.0,
+    allow_nan=False,
+    allow_infinity=False,
+    width=32,
 )
 
 _indices = st.integers(min_value=1, max_value=4)

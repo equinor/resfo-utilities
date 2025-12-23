@@ -90,16 +90,16 @@ def summary_variables(draw: st.DrawFn) -> str:
                 "region2region",
                 "mnemonic",
                 "region",
-            ]
-        )
+            ],
+        ),
     )
     if kind == "special":
         return draw(st.sampled_from(SPECIAL_KEYWORDS))
     if kind == "exceptions":
         return draw(
             st.sampled_from(
-                ["BAPI", "BOSAT", "BPR", "FAQR", "FPR", "FWCT", "WBHP", "WWCT", "ROFR"]
-            )
+                ["BAPI", "BOSAT", "BPR", "FAQR", "FPR", "FWCT", "WBHP", "WWCT", "ROFR"],
+            ),
         )
     if kind == "directional":
         direction = draw(st.sampled_from("IJK"))
@@ -115,7 +115,7 @@ def summary_variables(draw: st.DrawFn) -> str:
         return "N" + root
     if kind == "segment":
         return draw(
-            st.sampled_from(["SALQ", "SFR", "SGFR", "SGFRF", "SGFRS", "SGFTA", "SGFT"])
+            st.sampled_from(["SALQ", "SFR", "SGFR", "SGFRF", "SGFRS", "SGFTA", "SGFT"]),
         )
     if kind == "well":
         return draw(
@@ -134,9 +134,9 @@ def summary_variables(draw: st.DrawFn) -> str:
                         "WPIL",
                         "WPIO",
                         "WPI5",
-                    ]
+                    ],
                 ),
-            )
+            ),
         )
     if kind == "region2region":
         return draw(st.sampled_from(_inter_region_summary_variables))
@@ -146,7 +146,7 @@ def summary_variables(draw: st.DrawFn) -> str:
 
 
 _unit_names = st.sampled_from(
-    ["SM3/DAY", "BARSA", "SM3/SM3", "FRACTION", "DAYS", "HOURS", "SM3"]
+    ["SM3/DAY", "BARSA", "SM3/SM3", "FRACTION", "DAYS", "HOURS", "SM3"],
 )
 
 _names = st.text(
@@ -381,7 +381,7 @@ def smspecs(
                 from_dtype(np.dtype(np.int32), min_value=1, max_value=nx * ny * nz),
                 min_size=len(sum_keys_),
                 max_size=len(sum_keys_),
-            )
+            ),
         ),
     ]
     return draw(
@@ -410,7 +410,7 @@ def smspecs(
                 else start_date
             ),
             use_names=st.booleans(),
-        )
+        ),
     )
 
 
@@ -509,7 +509,7 @@ def summaries(
             sum_keys=st.just(sum_keys),
             start_date=st.just(Date.from_datetime(first_date)),
             use_days=st.just(days),
-        )
+        ),
     )
     # The smspec should be unique up to summary_keys.
     # This just mimics the behavior of simulators.
@@ -541,10 +541,10 @@ def summaries(
                                 _positive_floats,
                                 min_size=len(sum_keys),
                                 max_size=len(sum_keys),
-                            )
+                            ),
                         ),
                     ],
-                )
+                ),
             )
             i += 1
         steps.append(SummaryStep(j, minis))

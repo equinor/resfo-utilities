@@ -278,7 +278,7 @@ class RFTReader(Iterable[RFTEntry]):
                 if kw != "TIME":
                     raise InvalidRFTError(
                         f"Unexpected keyword {kw} in rft file {self._name}. "
-                        "Expected RFT file to start with 'TIME'"
+                        "Expected RFT file to start with 'TIME'",
                     )
                 incomplete_entry = True
                 time_array = _validate_array("TIME", self._name, time_elem.read_array())
@@ -296,14 +296,16 @@ class RFTReader(Iterable[RFTEntry]):
                         if kw != expected:
                             raise InvalidRFTError(
                                 f"Unexpected keyword {kw} in rft file {self._name}. "
-                                f"Expected {expected}."
+                                f"Expected {expected}.",
                             )
                         values.append(
-                            _validate_array(kw, self._name, elem.read_array())
+                            _validate_array(kw, self._name, elem.read_array()),
                         )
                     date_array = values[0]
                     date = datetime.date(
-                        day=date_array[0], month=date_array[1], year=date_array[2]
+                        day=date_array[0],
+                        month=date_array[1],
+                        year=date_array[2],
                     )
                     well_etc = [key_to_str(v) for v in values[1]]
                     if len(well_etc) > 11:
@@ -324,7 +326,9 @@ class RFTReader(Iterable[RFTEntry]):
                     kw = elem.read_keyword().strip()
                     while kw != "TIME":
                         entry._data[kw] = _validate_array(
-                            kw, self._name, elem.read_array()
+                            kw,
+                            self._name,
+                            elem.read_array(),
                         )
                         elem = next(array_iterator)
                         kw = elem.read_keyword().strip()
@@ -338,7 +342,7 @@ class RFTReader(Iterable[RFTEntry]):
                     yield entry
                 if incomplete_entry:
                     raise InvalidRFTError(
-                        f"Reached end-of-file while reading entry in {self._name}"
+                        f"Reached end-of-file while reading entry in {self._name}",
                     ) from None
 
         return inner()

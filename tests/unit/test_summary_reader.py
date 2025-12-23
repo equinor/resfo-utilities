@@ -28,11 +28,13 @@ def test_that_summary_reader_can_be_initialized_with_either_path_or_io(tmp_path:
 
 @given(st.binary(), st.binary())
 def test_that_summary_reader_only_raises_invalid_summary_error(
-    spec: bytes, unsmry: bytes
+    spec: bytes,
+    unsmry: bytes,
 ):
     with suppress(InvalidSummaryError):
         reader = SummaryReader(
-            smspec=lambda: BytesIO(spec), summaries=[lambda: BytesIO(unsmry)]
+            smspec=lambda: BytesIO(spec),
+            summaries=[lambda: BytesIO(unsmry)],
         )
         _ = list(reader.values())
 
@@ -102,7 +104,9 @@ def read_summary(smspec, unsmry, report_step_only=True):
     ],
 )
 def test_that_incorrect_summary_files_raises_informative_errors(
-    smry_contents, spec_contents, error_message
+    smry_contents,
+    spec_contents,
+    error_message,
 ):
     smry_buf = BytesIO(smry_contents)
     smry_buf.seek(0)
@@ -279,12 +283,13 @@ def test_that_restart_absolute_path_is_preserved(tmp_path: Path):
 def test_that_missing_dimens_num_keywords_emits_warning_and_uses_keyword_length():
     keywords = ("WOPR    ", "WWPR    ", "FOPT    ")
     smspec_buf = write_resfo_buf(
-        minimal_smspec(keywords=keywords, units=("U1", "U2", "U3"))
+        minimal_smspec(keywords=keywords, units=("U1", "U2", "U3")),
     )
     unsmry_buf = write_resfo_buf(minimal_summary([(True, [1.0, 2.0, 3.0])]))
     reader = SummaryReader(smspec=lambda: smspec_buf, summaries=[lambda: unsmry_buf])
     with pytest.warns(
-        UserWarning, match="SMSPEC did not contain num_keywords in DIMENS"
+        UserWarning,
+        match="SMSPEC did not contain num_keywords in DIMENS",
     ):
         kws = reader.summary_keywords
     assert len(kws) == len(keywords)
@@ -297,7 +302,7 @@ def test_that_num_keywords_is_truncated_when_dimens_value_exceeds_keywords_and_w
             keywords=keywords,
             units=("U1", "U2"),
             dimens=(5, 0, 0, 0),  # num_keywords > actual
-        )
+        ),
     )
     unsmry_buf = write_resfo_buf(minimal_summary([(True, [1.0, 2.0])]))
     reader = SummaryReader(smspec=lambda: smspec_buf, summaries=[lambda: unsmry_buf])
@@ -313,7 +318,7 @@ def test_that_names_alias_is_used_when_wgnames_is_missing():
             wgnames=None,
             names=names,
             dimens=(2, 0, 0, 0),
-        )
+        ),
     )
     unsmry_buf = write_resfo_buf(minimal_summary([(True, [1.0, 2.0])]))
     reader = SummaryReader(smspec=lambda: smspec_buf, summaries=[lambda: unsmry_buf])
@@ -328,7 +333,7 @@ def test_that_wgnames_is_used_for_keyword_names():
             wgnames=wgnames,
             names=None,
             dimens=(2, 0, 0, 0),
-        )
+        ),
     )
     unsmry_buf = write_resfo_buf(minimal_summary([(True, [1.0, 2.0])]))
     reader = SummaryReader(smspec=lambda: smspec_buf, summaries=[lambda: unsmry_buf])

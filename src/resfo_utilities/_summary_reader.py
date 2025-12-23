@@ -167,12 +167,12 @@ class SummaryReader:
         if case_path is None and (smspec is None or summaries is None):
             raise ValueError(
                 "SummaryReader must be initialized with"
-                " either case_path or both smspec and summaries."
+                " either case_path or both smspec and summaries.",
             )
         if case_path is not None and (smspec is not None or summaries is not None):
             raise ValueError(
                 "SummaryReader must be initialized with"
-                " either case_path or smspec and summaries, not both."
+                " either case_path or smspec and summaries, not both.",
             )
 
         if case_path is not None:
@@ -255,7 +255,8 @@ class SummaryReader:
         return self._restart
 
     def values(
-        self, report_step_only: bool = True
+        self,
+        report_step_only: bool = True,
     ) -> Iterator[npt.NDArray[np.float32]]:
         """Iterate over the values for the summary keywords.
 
@@ -282,7 +283,9 @@ class SummaryReader:
                         nonlocal last_params
                         if last_params is not None:
                             vals = _validate_array(
-                                "PARAMS", summary_name, last_params.read_array()
+                                "PARAMS",
+                                summary_name,
+                                last_params.read_array(),
                             )
                             last_params = None
                             yield vals
@@ -298,11 +301,11 @@ class SummaryReader:
                     yield from read_params(summary_name)
         except OSError as err:
             raise InvalidSummaryError(
-                f"Could not read from summary file {err.filename}: {err.strerror}"
+                f"Could not read from summary file {err.filename}: {err.strerror}",
             ) from err
         except resfo.ResfoParsingError as err:
             raise InvalidSummaryError(
-                f"Summary files contained invalid contents: {err}"
+                f"Summary files contained invalid contents: {err}",
             ) from err
 
     def _get_file_openers(
@@ -409,15 +412,15 @@ def _read_spec(
                         )
                     except Exception as err:
                         raise InvalidSummaryError(
-                            f"SMSPEC {spec_name} contains invalid STARTDAT: {err}"
+                            f"SMSPEC {spec_name} contains invalid STARTDAT: {err}",
                         ) from err
     except OSError as err:
         raise InvalidSummaryError(
-            f"Could not read from summary spec {err.filename}: {err.strerror}"
+            f"Could not read from summary spec {err.filename}: {err.strerror}",
         ) from err
     except resfo.ResfoParsingError as err:
         raise InvalidSummaryError(
-            f"Summary spec contained invalid contents: {err}"
+            f"Summary spec contained invalid contents: {err}",
         ) from err
 
     keywords = arrays["KEYWORDS"]
@@ -554,18 +557,21 @@ def _get_summary_filenames(filepath: str | os.PathLike[str]) -> tuple[list[str],
             lambda x: os.path.join(directory, x),
             filter(
                 lambda x: _is_base_with_extension(
-                    path=x, base=case_name, ext=ANY_SUMMARY_EXTENSION
+                    path=x,
+                    base=case_name,
+                    ext=ANY_SUMMARY_EXTENSION,
                 ),
                 os.listdir(directory or "."),
             ),
-        )
+        ),
     )
 
     def filter_extension(ext: str, lst: Iterable[str]) -> Iterator[str]:
         return filter(partial(_has_extension, ext=ext), lst)
 
     smry_candidates = filter_extension(
-        r"unsmry|funsmry|s\d\d\d\d|a\d\d\d\d", smry_candidates
+        r"unsmry|funsmry|s\d\d\d\d|a\d\d\d\d",
+        smry_candidates,
     )
     if specified_split:
         smry_candidates = filter_extension(r"s\d\d\d\d|a\d\d\d\d", smry_candidates)

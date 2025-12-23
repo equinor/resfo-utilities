@@ -23,7 +23,7 @@ def large_regular_grid():
 def test_benchmark_find_cell(large_regular_grid, benchmark):
     def run():
         assert large_regular_grid.find_cell_containing_point(
-            [(i + 25.5, j + 25.5, 20.5) for i, j in product(range(10), range(10))]
+            [(i + 25.5, j + 25.5, 20.5) for i, j in product(range(10), range(10))],
         ) == [(i + 25, j + 25, 2) for i, j in product(range(10), range(10))]
 
     benchmark(run)

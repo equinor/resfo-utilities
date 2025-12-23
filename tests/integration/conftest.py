@@ -12,7 +12,7 @@ def simulator_cmd():
     if not simulator_cmd:
         pytest.skip(
             reason="Did not find OPM flow simulator"
-            " and no simulator set in TEST_SIMULATOR_CMD"
+            " and no simulator set in TEST_SIMULATOR_CMD",
         )
     return simulator_cmd.split()
 
@@ -42,7 +42,7 @@ class AdditionalDeckContents:
             ),
             id="With one LGR grid",
         ),
-    ]
+    ],
 )
 def eightcells(request, simulator_cmd: list[str], tmp_path: Path) -> None:
     additions = request.param
@@ -234,6 +234,6 @@ def eightcells(request, simulator_cmd: list[str], tmp_path: Path) -> None:
 
         TSTEP
         1 1 /
-        """
-        )
+        """,
+        ),
     )

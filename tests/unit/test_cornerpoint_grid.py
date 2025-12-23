@@ -48,7 +48,7 @@ def test_that_read_egrid_raises_invalid_egrid_file_when_gridhead_is_too_short():
 def test_that_read_egrid_raises_invalid_egrid_file_when_coord_is_mess():
     with pytest.raises(InvalidEgridFileError, match="MESS"):
         CornerpointGrid.read_egrid(
-            write_to_buffer([("GRIDHEAD", [1, 1, 1, 1]), ("COORD   ", resfo.MESS)])
+            write_to_buffer([("GRIDHEAD", [1, 1, 1, 1]), ("COORD   ", resfo.MESS)]),
         )
 
 
@@ -68,7 +68,7 @@ def test_that_read_egrid_warns_when_the_global_grid_does_not_have_reference_numb
                     ("COORD   ", [1.0] * (8 * 3)),
                     ("ZCORN   ", [1.0] * 8),
                 ],
-            )
+            ),
         )
 
 
@@ -81,7 +81,7 @@ def test_that_read_egrid_raises_invalid_egrid_file_when_coord_has_too_many_value
                     ("COORD   ", [1.0]),
                     ("ZCORN   ", [1.0] * 8),
                 ],
-            )
+            ),
         )
 
 
@@ -119,7 +119,8 @@ def test_that_grid_with_invalid_zcorn_shape_raises():
 
 def test_that_grid_with_zcorn_and_coord_shape_mismatch_raises():
     with pytest.raises(
-        InvalidGridError, match="zcorn and coord dimensions do not match"
+        InvalidGridError,
+        match="zcorn and coord dimensions do not match",
     ):
         CornerpointGrid(
             coord=np.array(
@@ -176,8 +177,8 @@ def test_that_read_egrid_fetches_the_geometry_from_the_global_grid_in_the_file(
                 ("ACTNUM  ", np.ones((8,), dtype=">i4")),
                 ("ENDGRID ", np.array([], dtype=">i4")),
                 *contents_after_global_grid,
-            ]
-        )
+            ],
+        ),
     )
     assert grid.map_axes.origin == (0.0, 0.0)
     assert grid.map_axes.y_axis == (0.0, 1.0)
@@ -268,7 +269,10 @@ def unit_cell_grid():
 def test_that_interior_points_are_in_the_cell(unit_cell_grid):
     assert unit_cell_grid.point_in_cell((0.5, 0.5, 0.5), 0, 0, 0)
     assert unit_cell_grid.point_in_cell(
-        [(0.5, 0.5, 0.5), (0.25, 0.25, 0.25)], 0, 0, 0
+        [(0.5, 0.5, 0.5), (0.25, 0.25, 0.25)],
+        0,
+        0,
+        0,
     ).tolist() == [True, True]
 
 
@@ -308,25 +312,29 @@ def test_that_points_on_faces_are_in_the_cell(unit_cell_grid):
 
 def test_that_transform_points_does_not_scale_by_map_axes():
     assert MapAxes((0.0, 10.0), (0.0, 0.0), (1.0, 0.0)).transform_map_points(
-        np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]])
+        np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]]),
     ).tolist() == [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]]
 
     assert MapAxes((0.0, 1.0), (0.0, 0.0), (10.0, 0.0)).transform_map_points(
-        np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]])
+        np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]]),
     ).tolist() == [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]]
 
 
 def test_that_transform_points_translates_by_origin():
     assert_allclose(
         MapAxes((100.0, 51.0), (100.0, 50.0), (101.0, 50.0)).transform_map_points(
-            np.array([[101.0, 50.0, 0.0], [100.0, 51.0, 0.0], [101.0, 51.0, 1.0]])
+            np.array([[101.0, 50.0, 0.0], [100.0, 51.0, 0.0], [101.0, 51.0, 1.0]]),
         ),
         [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]],
     )
 
 
 coordinates = st.floats(
-    allow_nan=False, allow_infinity=False, min_value=-1.0e9, max_value=1.0e9, width=32
+    allow_nan=False,
+    allow_infinity=False,
+    min_value=-1.0e9,
+    max_value=1.0e9,
+    width=32,
 )
 
 
@@ -340,7 +348,7 @@ def regular_grids(draw):
             allow_nan=False,
             allow_infinity=False,
             width=32,
-        )
+        ),
     )
     top_depth = draw(
         st.floats(
@@ -349,7 +357,7 @@ def regular_grids(draw):
             allow_nan=False,
             allow_infinity=False,
             width=32,
-        )
+        ),
     )
     bot_depth = top_depth + height
     coord = np.zeros((ni + 1, nj + 1, 2, 3), dtype=np.float32)
@@ -359,7 +367,7 @@ def regular_grids(draw):
         coord[i, j, 1] = [i, j, bot_depth]
     for i, j, k in product(range(ni), range(nj), range(nk)):
         zcorn[i, j, k] = [height * (k / nk) + top_depth] * 4 + [
-            height * ((k + 1) / nk) + top_depth
+            height * ((k + 1) / nk) + top_depth,
         ] * 4
     return CornerpointGrid(coord, zcorn)
 
@@ -382,7 +390,7 @@ def test_that_found_cell_contains_point(grid, point, data):
                 st.integers(min_value=0, max_value=grid.zcorn.shape[0] - 1),
                 st.integers(min_value=0, max_value=grid.zcorn.shape[1] - 1),
                 st.integers(min_value=0, max_value=grid.zcorn.shape[2] - 1),
-            )
+            ),
         )
         assert not grid.point_in_cell(point, i, j, k, tolerance=1e-14)
     else:
@@ -395,14 +403,16 @@ def test_that_found_cell_contains_point(grid, point, data):
     data=st.data(),
 )
 def test_that_on_regular_grids_point_in_cell_is_the_same_as_in_bounding_box(
-    grid, point, data
+    grid,
+    point,
+    data,
 ):
     cell = data.draw(
         st.tuples(
             st.integers(min_value=0, max_value=grid.zcorn.shape[0] - 1),
             st.integers(min_value=0, max_value=grid.zcorn.shape[1] - 1),
             st.integers(min_value=0, max_value=grid.zcorn.shape[2] - 1),
-        )
+        ),
     )
     cell_corners = grid.cell_corners(*cell)
     tolerance = 1e-6
@@ -463,8 +473,8 @@ def test_that_point_in_cell_correctly_orders_zcorn_against_coord():
                 [
                     [
                         [729, 707, 733, 718, 735, 712, 738, 723],
-                    ]
-                ]
+                    ],
+                ],
             ],
             dtype=np.float32,
         ),
@@ -499,8 +509,8 @@ def test_that_point_in_cell_correctly_assign_vertices_to_faces():
                 [
                     [
                         [0, 0, 0, 0, 1, 1, 1, 1],
-                    ]
-                ]
+                    ],
+                ],
             ],
             dtype=np.float32,
         ),
@@ -583,7 +593,8 @@ def test_that_zero_height_pillar_is_invalid():
             dtype=np.float32,
         ),
         zcorn=np.array(
-            [[[[0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]]]], dtype=np.float32
+            [[[[0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]]]],
+            dtype=np.float32,
         ),
         map_axes=None,
     )
@@ -607,7 +618,8 @@ def test_that_cells_with_infinite_pillars_are_invalid():
             dtype=np.float32,
         ),
         zcorn=np.array(
-            [[[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]]], dtype=np.float32
+            [[[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]]],
+            dtype=np.float32,
         ),
         map_axes=None,
     )
@@ -619,14 +631,17 @@ def test_that_cells_with_infinite_pillars_are_invalid():
 @st.composite
 def single_cell_grids(draw):
     nice_elements = dict(
-        allow_nan=False, allow_infinity=False, max_value=2**12, min_value=-(2**12)
+        allow_nan=False,
+        allow_infinity=False,
+        max_value=2**12,
+        min_value=-(2**12),
     )
     coord = draw(
         arrays(
             np.float32,
             (2, 2, 2, 3),
             elements=nice_elements,
-        )
+        ),
     )
 
     for i in range(coord.shape[0]):
@@ -639,7 +654,7 @@ def single_cell_grids(draw):
                         **nice_elements,
                         **dict(min_value=bot_pillar_z, max_value=2**14),
                     },
-                )
+                ),
             )
 
     grid = CornerpointGrid(
@@ -670,7 +685,8 @@ def single_cell_grids(draw):
             dtype=np.float32,
         ),
         zcorn=np.array(
-            [[[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]]], dtype=np.float32
+            [[[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]]],
+            dtype=np.float32,
         ),
         map_axes=None,
     ),
@@ -692,7 +708,8 @@ def single_cell_grids(draw):
             dtype=np.float32,
         ),
         zcorn=np.array(
-            [[[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]]], dtype=np.float32
+            [[[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]]],
+            dtype=np.float32,
         ),
         map_axes=None,
     ),
@@ -714,15 +731,20 @@ def single_cell_grids(draw):
             dtype=np.float32,
         ),
         zcorn=np.array(
-            [[[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]]], dtype=np.float32
+            [[[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]]],
+            dtype=np.float32,
         ),
         map_axes=None,
     ),
     point=(0.0, 0.0, 9.999999747378752e-06),
 ).via("discovered failure")
 def test_that_in_single_cell_grids_found_and_contains_are_the_same(
-    grid: CornerpointGrid, point: tuple[float, float, float]
+    grid: CornerpointGrid,
+    point: tuple[float, float, float],
 ):
     assert bool(grid.find_cell_containing_point([point])[0]) == grid.point_in_cell(
-        point, 0, 0, 0
+        point,
+        0,
+        0,
+        0,
     )

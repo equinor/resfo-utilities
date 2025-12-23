@@ -61,7 +61,8 @@ class MapAxes:
     x_axis: tuple[np.float32, np.float32]
 
     def transform_map_points(
-        self, points: npt.NDArray[np.float32]
+        self,
+        points: npt.NDArray[np.float32],
     ) -> npt.NDArray[np.float32]:
         """Transforms points from map coordinates to grid coordinates.
 
@@ -85,7 +86,7 @@ class MapAxes:
                 (tx * y_unit[1] - ty * y_unit[0]) * norm,
                 (-tx * x_unit[1] + ty * x_unit[0]) * norm,
                 translated[:, 2],
-            ]
+            ],
         )
 
 
@@ -128,7 +129,7 @@ class CornerpointGrid:
         if self.zcorn.shape[0] != ni or self.zcorn.shape[1] != nj:
             raise InvalidGridError(
                 "zcorn and coord dimensions do not match:"
-                f" {self.zcorn.shape} vs {self.coord.shape}"
+                f" {self.zcorn.shape} vs {self.coord.shape}",
             )
 
     @classmethod
@@ -184,11 +185,11 @@ class CornerpointGrid:
             ) -> npt.NDArray[T]:
                 if isinstance(array, resfo.MessType):
                     raise InvalidEgridFileError(
-                        f"Expected Array for keyword {name} in {filename} but got MESS"
+                        f"Expected Array for keyword {name} in {filename} but got MESS",
                     )
                 if min_length is not None and len(array) < min_length:
                     raise InvalidEgridFileError(
-                        f"{name} in EGRID file {filename} contained too few elements"
+                        f"{name} in EGRID file {filename} contained too few elements",
                     )
 
                 return array
@@ -220,7 +221,7 @@ class CornerpointGrid:
                         if optional_get(array, 26) not in {0, None}:
                             raise InvalidEgridFileError(
                                 f"EGRID file {filename} contains a radial grid"
-                                " which is not supported by resfo-utilities."
+                                " which is not supported by resfo-utilities.",
                             )
 
                         dims = tuple(array[1:4])
@@ -236,15 +237,15 @@ class CornerpointGrid:
 
             if coord is None:
                 raise InvalidEgridFileError(
-                    f"EGRID file {filename} did not contain COORD"
+                    f"EGRID file {filename} did not contain COORD",
                 )
             if zcorn is None:
                 raise InvalidEgridFileError(
-                    f"EGRID file {filename} did not contain ZCORN"
+                    f"EGRID file {filename} did not contain ZCORN",
                 )
             if dims is None:
                 raise InvalidEgridFileError(
-                    f"EGRID file {filename} did not contain dimensions"
+                    f"EGRID file {filename} did not contain dimensions",
                 )
         except resfo.ResfoParsingError as err:
             raise InvalidEgridFileError(f"Could not parse EGRID file: {err}") from err
@@ -256,7 +257,7 @@ class CornerpointGrid:
         except ValueError as err:
             raise InvalidEgridFileError(
                 f"COORD size {len(coord)} did not match"
-                f" grid dimensions {dims} in {filename}"
+                f" grid dimensions {dims} in {filename}",
             ) from err
         try:
             zcorn = zcorn.reshape(2, dims[0], 2, dims[1], 2, dims[2], order="F")
@@ -265,7 +266,7 @@ class CornerpointGrid:
         except ValueError as err:
             raise InvalidEgridFileError(
                 f"ZCORN size {len(zcorn)} did not match"
-                f" grid dimensions {dims} in {filename}"
+                f" grid dimensions {dims} in {filename}",
             ) from err
         return cls(coord, zcorn, map_axes)
 
@@ -354,7 +355,7 @@ class CornerpointGrid:
                         self.intersection[self.i + 1, self.j],
                         self.intersection[self.i + 1, self.j + 1],
                         self.intersection[self.i, self.j + 1],
-                    ]
+                    ],
                 )
                 center_x, center_y = corners.mean(axis=0)
                 x_dist = abs(center_x - self.p[0])
@@ -370,7 +371,7 @@ class CornerpointGrid:
                     return False
                 return bool(
                     self.distance_intersection_center
-                    < other.distance_intersection_center
+                    < other.distance_intersection_center,
                 )
 
         if dims[0] <= 0 or dims[1] <= 0:
@@ -388,7 +389,7 @@ class CornerpointGrid:
                         dims[0] // 2,
                         dims[1] // 2,
                         intersection,
-                    )
+                    ),
                 ]
             else:
                 queue = [Quad(*prev_ij, p, 1, 1, intersection)]
@@ -410,7 +411,12 @@ class CornerpointGrid:
                             <= z
                             <= zcorn.max() + 2 * tolerance
                             and self.point_in_cell(
-                                p, i, j, k, tolerance=tolerance, map_coordinates=False
+                                p,
+                                i,
+                                j,
+                                k,
+                                tolerance=tolerance,
+                                map_coordinates=False,
                             )
                         ):
                             prev_ij = (i, j)
@@ -460,7 +466,7 @@ class CornerpointGrid:
                 self.coord[i, j + 1, :],
                 self.coord[i + 1, j, :],
                 self.coord[i + 1, j + 1, :],
-            ]
+            ],
         )
         top = pillar_vertices[::2][[0, 2, 1, 3]]
         bot = pillar_vertices[1::2][[0, 2, 1, 3]]
@@ -474,7 +480,7 @@ class CornerpointGrid:
 
         if np.any(height_diff == 0):
             raise InvalidGridError(
-                f"Grid contains zero height pillars with different for cell {i, j, k}"
+                f"Grid contains zero height pillars with different for cell {i, j, k}",
             )
 
         t = (self.zcorn[i, j, k] - twice(top_z)) / height_diff
@@ -483,7 +489,7 @@ class CornerpointGrid:
 
         if not np.all(np.isfinite(result)):
             raise InvalidGridError(
-                f"The corners of the cell at {i, j, k} is not well defined"
+                f"The corners of the cell at {i, j, k} is not well defined",
             )
 
         return result
@@ -533,7 +539,7 @@ class CornerpointGrid:
                 [1, -1, 1],
                 [-1, 1, 1],
                 [1, 1, 1],
-            ]
+            ],
         )
 
         def residual(
@@ -576,8 +582,8 @@ class CornerpointGrid:
                 solutions.append(
                     bool(
                         np.all(np.abs(sol.x) <= 1.0 + tolerance)
-                        and np.linalg.norm(residual(point)(sol.x)) <= tolerance
-                    )
+                        and np.linalg.norm(residual(point)(sol.x)) <= tolerance,
+                    ),
                 )
         return np.array(solutions, dtype=np.bool_)
 

@@ -65,6 +65,7 @@ select = [
     "ASYNC",
     "B",
     "BLE",
+    "COM",
     "CPY",
     "DJ",
     "DOC",

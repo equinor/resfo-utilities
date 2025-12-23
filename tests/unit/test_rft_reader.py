@@ -37,7 +37,7 @@ def well_etc(
             b"KG/SM3  ",
             b"KG/DAY  ",
             b"KG/KG   ",
-        ]
+        ],
     )
 
 
@@ -124,9 +124,9 @@ def test_that_reader_raises_invalid_rft_error_when_expected_keyword_missing():
                         ("TIME    ", np.array([1.0])),
                         ("DATE    ", np.array([1, 1, 2000])),
                         ("NOTEXPEC", np.array([1.0])),
-                    ]
-                )
-            )
+                    ],
+                ),
+            ),
         )
 
 
@@ -157,10 +157,10 @@ def test_that_lgr_name_is_none_if_spaces_only():
                             ("CONJPOS", np.array([1, 1])),
                             ("CONKPOS", np.array([1, 2])),
                             ("PRESSURE", np.array([100.0, 200.0])),
-                        ]
-                    )
-                )
-            )
+                        ],
+                    ),
+                ),
+            ),
         ).lgr_name
         is None
     )
@@ -180,10 +180,10 @@ def test_that_lgr_name_is_not_none_when_input_contains_non_space():
                             ("CONJPOS", np.array([1, 1])),
                             ("CONKPOS", np.array([1, 2])),
                             ("PRESSURE", np.array([100.0, 200.0])),
-                        ]
-                    )
-                )
-            )
+                        ],
+                    ),
+                ),
+            ),
         ).lgr_name
         == "LGRNAME"
     )
@@ -202,10 +202,10 @@ def test_that_optional_well_etc_fields_are_set_to_none_if_not_present():
                         ("CONJPOS", np.array([1, 1])),
                         ("CONKPOS", np.array([1, 2])),
                         ("PRESSURE", np.array([100.0, 200.0])),
-                    ]
-                )
-            )
-        )
+                    ],
+                ),
+            ),
+        ),
     )
 
     assert node.lgr_name is None
@@ -233,7 +233,7 @@ def test_that_rft_entries_can_have_multiple_categories():
             ("CONJPOS", np.array([1])),
             ("CONKPOS", np.array([1])),
             ("PRESSURE", np.array([100.0])),
-        ]
+        ],
     )
     reader = RFTReader(buffer)
     entries = list(reader)
@@ -261,7 +261,7 @@ def test_that_reader_can_read_multiple_rft_entries():
             ("CONJPOS", np.array([1])),
             ("CONKPOS", np.array([1])),
             ("PRESSURE", np.array([150.0])),
-        ]
+        ],
     )
     reader = RFTReader(buffer)
     entries = list(reader)
@@ -285,7 +285,7 @@ def test_that_reader_handles_multiple_data_arrays():
             ("PRESSURE", np.array([100.0])),
             ("DEPTH", np.array([1000.0])),
             ("SWAT", np.array([0.3])),
-        ]
+        ],
     )
     reader = RFTReader(buffer)
     entries = list(reader)

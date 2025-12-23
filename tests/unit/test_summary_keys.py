@@ -80,7 +80,11 @@ valid_names = st.text(min_size=1).filter(lambda name: name != DUMMY_NAME)
 @given(st.integers(), valid_names, positives, positives)
 @pytest.mark.parametrize("keyword", ["FOPR", "NEWTON"])
 def test_summary_key_format_of_field_and_misc_is_identity(
-    keyword, number, name, nx, ny
+    keyword,
+    number,
+    name,
+    nx,
+    ny,
 ):
     assert make_summary_key(keyword, number, name, nx, ny) == keyword
 
@@ -141,7 +145,12 @@ def test_block_summary_format_have_cell_index(keyword, number, indices, name, nx
     ],
 )
 def test_completion_summary_format_have_cell_index_and_name(
-    keyword, number, indices, name, nx, ny
+    keyword,
+    number,
+    indices,
+    name,
+    nx,
+    ny,
 ):
     assert (
         make_summary_key(keyword, number, name, nx, ny) == f"{keyword}:{name}:{indices}"
@@ -160,7 +169,12 @@ def test_completion_summary_format_have_cell_index_and_name(
     ],
 )
 def test_local_block_summary_format_have_cell_index_and_name(
-    keyword, lgr_name, indices, li, lj, lk
+    keyword,
+    lgr_name,
+    indices,
+    li,
+    lj,
+    lk,
 ):
     assert (
         make_summary_key(keyword, li=li, lj=lj, lk=lk, lgr_name=lgr_name)
@@ -181,7 +195,13 @@ def test_local_block_summary_format_have_cell_index_and_name(
     ],
 )
 def test_local_completion_summary_format_have_cell_index_and_name(
-    keyword, name, lgr_name, indices, li, lj, lk
+    keyword,
+    name,
+    lgr_name,
+    indices,
+    li,
+    lj,
+    lk,
 ):
     assert (
         make_summary_key(keyword, name=name, li=li, lj=lj, lk=lk, lgr_name=lgr_name)
@@ -200,7 +220,8 @@ def test_local_well_summary_format_have_cell_index_and_name(keyword, name, lgr_n
 
 def nonempty_string_without_whitespace():
     return st.text(
-        st.characters(whitelist_categories=("Lu", "Ll", "Nd", "P")), min_size=1
+        st.characters(whitelist_categories=("Lu", "Ll", "Nd", "P")),
+        min_size=1,
     )
 
 
@@ -211,70 +232,80 @@ def test_is_rate_does_not_raise_error(key):
 
 
 @pytest.mark.parametrize(
-    "opr_summary_variable", ["FOPR", "FOPR", "GOPR", "WOPR", "COPR", "ROPR", "LCOPR"]
+    "opr_summary_variable",
+    ["FOPR", "FOPR", "GOPR", "WOPR", "COPR", "ROPR", "LCOPR"],
 )
 def test_that_oil_production_rate_is_a_rate(opr_summary_variable):
     assert is_rate(opr_summary_variable)
 
 
 @pytest.mark.parametrize(
-    "opt_summary_variable", ["FOPT", "FOPT", "GOPT", "WOPT", "COPT", "ROPT", "LCOPT"]
+    "opt_summary_variable",
+    ["FOPT", "FOPT", "GOPT", "WOPT", "COPT", "ROPT", "LCOPT"],
 )
 def test_that_oil_production_total_is_not_a_rate(opt_summary_variable):
     assert not is_rate(opt_summary_variable)
 
 
 @pytest.mark.parametrize(
-    "gpr_summary_variable", ["FGPR", "FGPR", "GGPR", "WGPR", "CGPR", "RGPR", "LCGPR"]
+    "gpr_summary_variable",
+    ["FGPR", "FGPR", "GGPR", "WGPR", "CGPR", "RGPR", "LCGPR"],
 )
 def test_that_gas_production_rate_is_a_rate(gpr_summary_variable):
     assert is_rate(gpr_summary_variable)
 
 
 @pytest.mark.parametrize(
-    "opt_summary_variable", ["FGPT", "FGPT", "GGPT", "WGPT", "CGPT", "RGPT", "LCGPT"]
+    "opt_summary_variable",
+    ["FGPT", "FGPT", "GGPT", "WGPT", "CGPT", "RGPT", "LCGPT"],
 )
 def test_that_gas_production_total_is_not_a_rate(opt_summary_variable):
     assert not is_rate(opt_summary_variable)
 
 
 @pytest.mark.parametrize(
-    "gir_summary_variable", ["FGIR", "FGIR", "GGIR", "WGIR", "CGIR", "RGIR", "LCGIR"]
+    "gir_summary_variable",
+    ["FGIR", "FGIR", "GGIR", "WGIR", "CGIR", "RGIR", "LCGIR"],
 )
 def test_that_gas_injection_rate_is_a_rate(gir_summary_variable):
     assert is_rate(gir_summary_variable)
 
 
 @pytest.mark.parametrize(
-    "git_summary_variable", ["FGIT", "FGIT", "GGIT", "WGIT", "CGIT", "RGIT", "LCGIT"]
+    "git_summary_variable",
+    ["FGIT", "FGIT", "GGIT", "WGIT", "CGIT", "RGIT", "LCGIT"],
 )
 def test_that_gas_injection_total_is_not_a_rate(git_summary_variable):
     assert not is_rate(git_summary_variable)
 
 
 @pytest.mark.parametrize(
-    "wpr_summary_variable", ["FWPR", "FWPR", "GWPR", "WWPR", "CWPR", "RWPR", "LCWPR"]
+    "wpr_summary_variable",
+    ["FWPR", "FWPR", "GWPR", "WWPR", "CWPR", "RWPR", "LCWPR"],
 )
 def test_that_water_production_rate_is_a_rate(wpr_summary_variable):
     assert is_rate(wpr_summary_variable)
 
 
 @pytest.mark.parametrize(
-    "wpt_summary_variable", ["FWPT", "FGPT", "GGPT", "WGPT", "CGPT", "RGPT", "LCGPT"]
+    "wpt_summary_variable",
+    ["FWPT", "FGPT", "GGPT", "WGPT", "CGPT", "RGPT", "LCGPT"],
 )
 def test_that_water_production_total_is_not_a_rate(wpt_summary_variable):
     assert not is_rate(wpt_summary_variable)
 
 
 @pytest.mark.parametrize(
-    "wir_summary_variable", ["FWIR", "FWIR", "GWIR", "WWIR", "CWIR", "RWIR", "LCWIR"]
+    "wir_summary_variable",
+    ["FWIR", "FWIR", "GWIR", "WWIR", "CWIR", "RWIR", "LCWIR"],
 )
 def test_that_water_injection_rate_is_a_rate(wir_summary_variable):
     assert is_rate(wir_summary_variable)
 
 
 @pytest.mark.parametrize(
-    "wit_summary_variable", ["FWIT", "FWIT", "GWIT", "WWIT", "CWIT", "RWIT", "LCWIT"]
+    "wit_summary_variable",
+    ["FWIT", "FWIT", "GWIT", "WWIT", "CWIT", "RWIT", "LCWIT"],
 )
 def test_that_water_injection_total_is_not_a_rate(wit_summary_variable):
     assert not is_rate(wit_summary_variable)
@@ -301,35 +332,40 @@ def test_that_number_of_production_wells_flowing_is_not_a_rate(mwpr_summary_vari
 
 
 @pytest.mark.parametrize(
-    "gor_summary_variable", ["FGOR", "GGOR", "WGOR", "CGOR", "CGORL", "SGOR"]
+    "gor_summary_variable",
+    ["FGOR", "GGOR", "WGOR", "CGOR", "CGORL", "SGOR"],
 )
 def test_that_gas_oil_ratio_is_a_rate(gor_summary_variable):
     assert is_rate(gor_summary_variable)
 
 
 @pytest.mark.parametrize(
-    "ogr_summary_variable", ["FOGR", "GOGR", "WOGR", "COGR", "COGRL", "SOGR"]
+    "ogr_summary_variable",
+    ["FOGR", "GOGR", "WOGR", "COGR", "COGRL", "SOGR"],
 )
 def test_that_oil_gas_ratio_is_a_rate(ogr_summary_variable):
     assert is_rate(ogr_summary_variable)
 
 
 @pytest.mark.parametrize(
-    "wgr_summary_variable", ["FWGR", "GWGR", "WWGR", "CWGR", "CWGRL", "SWGR"]
+    "wgr_summary_variable",
+    ["FWGR", "GWGR", "WWGR", "CWGR", "CWGRL", "SWGR"],
 )
 def test_that_water_gas_ratio_is_a_rate(wgr_summary_variable):
     assert is_rate(wgr_summary_variable)
 
 
 @pytest.mark.parametrize(
-    "glr_summary_variable", ["FGLR", "GGLR", "WGLR", "CGLR", "CGLRL"]
+    "glr_summary_variable",
+    ["FGLR", "GGLR", "WGLR", "CGLR", "CGLRL"],
 )
 def test_that_gas_liquid_ratio_is_a_rate(glr_summary_variable):
     assert is_rate(glr_summary_variable)
 
 
 @pytest.mark.parametrize(
-    "wct_summary_variable", ["FWCT", "GWCT", "WWCT", "CWCT", "CWCTL", "SWCT"]
+    "wct_summary_variable",
+    ["FWCT", "GWCT", "WWCT", "CWCT", "CWCTL", "SWCT"],
 )
 def test_that_water_cut_is_a_rate(wct_summary_variable):
     assert is_rate(wct_summary_variable)

@@ -144,7 +144,9 @@ def is_rate(summary_variable: str) -> bool:
         case SummaryKeyType.INTER_REGION:
             # Region to region rates are identified by R*FR or R**FR
             return _match_rate_root(2, ["FR"], summary_variable) or _match_rate_root(
-                3, ["FR"], summary_variable
+                3,
+                ["FR"],
+                summary_variable,
             )
 
     return False
@@ -284,7 +286,9 @@ __all__ = [
 
 
 def _check_if_missing(
-    keyword_name: str, missing_key: str, *test_vars: T | None
+    keyword_name: str,
+    missing_key: str,
+    *test_vars: T | None,
 ) -> list[T]:
     if any(v is None for v in test_vars):
         raise InvalidSummaryKeyError(f"{keyword_name} keyword without {missing_key}")
@@ -297,14 +301,14 @@ _DUMMY_NAME = ":+:+:+:+"
 def _check_if_valid_name(keyword_name: str, name: str) -> None:
     if not name or name == _DUMMY_NAME:
         raise InvalidSummaryKeyError(
-            f"{keyword_name} keyword given invalid name '{name}'"
+            f"{keyword_name} keyword given invalid name '{name}'",
         )
 
 
 def _check_is_positive_number(keyword_name: str, number: int) -> None:
     if number < 0:
         raise InvalidSummaryKeyError(
-            f"{keyword_name} keyword given negative number {number}"
+            f"{keyword_name} keyword given negative number {number}",
         )
 
 
