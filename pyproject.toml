@@ -91,6 +91,7 @@ select = [
     "PLE",
     "PYI",
     "Q",
+    "RET",
     "RSE",
     "RUF",    # ruff specific rules
     "SIM",    # flake8-simplify

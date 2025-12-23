@@ -61,18 +61,13 @@ def _root_memnonic(draw: st.DrawFn) -> str:
         third_character = draw(st.sampled_from("QL"))
         fourth_character = draw(st.sampled_from("RT"))
         return first_character + second_character + third_character + fourth_character
-    else:
-        second_character = draw(st.sampled_from("OWGVLPT"))
-        third_character = draw(st.sampled_from("PIF"))
-        fourth_character = draw(st.sampled_from("RT"))
-        local = draw(st.sampled_from(["", "L"])) if first_character in "BCW" else ""
-        return (
-            local
-            + first_character
-            + second_character
-            + third_character
-            + fourth_character
-        )
+    second_character = draw(st.sampled_from("OWGVLPT"))
+    third_character = draw(st.sampled_from("PIF"))
+    fourth_character = draw(st.sampled_from("RT"))
+    local = draw(st.sampled_from(["", "L"])) if first_character in "BCW" else ""
+    return (
+        local + first_character + second_character + third_character + fourth_character
+    )
 
 
 @st.composite
@@ -106,23 +101,23 @@ def summary_variables(draw: st.DrawFn) -> str:
                 ["BAPI", "BOSAT", "BPR", "FAQR", "FPR", "FWCT", "WBHP", "WWCT", "ROFR"]
             )
         )
-    elif kind == "directional":
+    if kind == "directional":
         direction = draw(st.sampled_from("IJK"))
         return (
             draw(st.sampled_from(["FLOO", "VELG", "VELO", "FLOW", "VELW"])) + direction
         )
-    elif kind == "up_or_down":
+    if kind == "up_or_down":
         dimension = draw(st.sampled_from("XYZRT"))
         direction = draw(st.sampled_from(["", "-"]))
         return draw(st.sampled_from(["GKR", "OKR", "WKR"])) + dimension + direction
-    elif kind == "network":
+    if kind == "network":
         root = draw(_root_memnonic())
         return "N" + root
-    elif kind == "segment":
+    if kind == "segment":
         return draw(
             st.sampled_from(["SALQ", "SFR", "SGFR", "SGFRF", "SGFRS", "SGFTA", "SGFT"])
         )
-    elif kind == "well":
+    if kind == "well":
         return draw(
             st.one_of(
                 st.builds(lambda r: "W" + r, _root_memnonic()),
@@ -143,12 +138,11 @@ def summary_variables(draw: st.DrawFn) -> str:
                 ),
             )
         )
-    elif kind == "region2region":
+    if kind == "region2region":
         return draw(st.sampled_from(_inter_region_summary_variables))
-    elif kind == "region":
+    if kind == "region":
         return draw(st.builds(lambda r: "R" + r, _root_memnonic()))
-    else:
-        return draw(_root_memnonic())
+    return draw(_root_memnonic())
 
 
 _unit_names = st.sampled_from(
@@ -308,8 +302,7 @@ class Smspec:
         def optional(maybe_list: list[Any] | None) -> list[Any]:
             if maybe_list is None:
                 return []
-            else:
-                return maybe_list
+            return maybe_list
 
         for var, num, name, lgr, lx, ly, lz in zip_longest(
             self.keywords,
@@ -458,8 +451,7 @@ class Unsmry:
     steps: list[SummaryStep]
 
     def to_smry(self) -> list[tuple[str, npt.NDArray[Any]]]:
-        a = [i for step in self.steps for i in step.to_smry()]
-        return a
+        return [i for step in self.steps for i in step.to_smry()]
 
     def to_file(
         self,

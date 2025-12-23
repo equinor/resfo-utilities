@@ -47,6 +47,7 @@ def step_value(unsmry: Unsmry, index: int, kw_index: int):
             if index < len(step.ministeps):
                 return step.ministeps[index].params[kw_index]
             index -= len(step.ministeps)
+    return None
 
 
 @given(summary=summaries(), report_step_only=st.booleans())

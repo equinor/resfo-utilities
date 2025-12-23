@@ -82,8 +82,7 @@ class GridRelative(Enum):
     def to_egrid(self) -> str:
         if self == GridRelative.MAP:
             return "MAP".ljust(8)
-        else:
-            return "".ljust(8)
+        return "".ljust(8)
 
 
 @dataclass
@@ -140,8 +139,7 @@ class CoordinateType(Enum):
     def to_egrid(self) -> int:
         if self == CoordinateType.CARTESIAN:
             return 0
-        else:
-            return 1
+        return 1
 
 
 @unique
