@@ -1,4 +1,4 @@
-project = "resfo-utilities"
+project = "resfo-utilities"  # noqa: INP001
 copyright = "2022, Equinor"  # noqa: A001
 author = "Equinor"
 release = "1.0.0"
