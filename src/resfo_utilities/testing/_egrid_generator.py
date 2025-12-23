@@ -264,7 +264,7 @@ class GridHead:
 
 
 @dataclass
-class GlobalGrid:
+class GlobalGrid:  # noqa: PLW1641
     """
     The global grid contains the layout of the grid before
     refinements, and the sectioning into grid coarsening

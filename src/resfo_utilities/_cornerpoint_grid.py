@@ -565,7 +565,6 @@ class CornerpointGrid:
 
         solutions = []
         for point in points:
-            point = point
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 initial_guess = (
