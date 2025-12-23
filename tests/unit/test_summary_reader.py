@@ -80,7 +80,7 @@ def read_summary(smspec, unsmry, report_step_only=True):
         (b"", b"", "Keyword startdat missing"),
         (b"1", b"1", "Summary files contained invalid contents"),
         (
-            b"\x00\x00\x00\x10FOOOOOOO\x00\x00\x00\x01"
+            b"\x00\x00\x00\x10FOOOOOOO\x00\x00\x00\x01"  # noqa: ISC003
             + b"INTE"
             + b"\x00\x00\x00\x10"
             + (4).to_bytes(4, signed=True, byteorder="big")
@@ -89,7 +89,7 @@ def read_summary(smspec, unsmry, report_step_only=True):
             "Keyword startdat missing",
         ),
         (
-            b"\x00\x00\x00\x10STARTDAT\x00\x00\x00\x01"
+            b"\x00\x00\x00\x10STARTDAT\x00\x00\x00\x01"  # noqa: ISC003
             + b"INTE"
             + b"\x00\x00\x00\x10"
             + (4).to_bytes(4, signed=True, byteorder="big")

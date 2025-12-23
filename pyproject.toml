@@ -80,6 +80,7 @@ select = [
     "INP",
     "ICN",
     "INT",
+    "ISC",
     "LOG",
     "NPY",
     "PD",
