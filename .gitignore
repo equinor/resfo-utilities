@@ -41,6 +41,21 @@ scratch.sparsebundle
 ## pip install without -e
 /build
 
+# CMake build artifacts
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+*.cmake
+_skbuild/
+
+# Generated version file
+src/resfo_utilities/_version.py
+
+# Compiled C++ extensions
+*.so
+*.pyd
+*.dll
+
 # Built docs folder
 /docs/output
 

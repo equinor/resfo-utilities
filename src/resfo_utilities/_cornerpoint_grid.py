@@ -20,18 +20,16 @@ coordinate system is represented by :py:class:`resfo_utilities.MapAxes`.
 
 from __future__ import annotations
 
-import heapq
 import os
 import warnings
-from collections.abc import Callable
 from dataclasses import dataclass
-from functools import cached_property
 from typing import IO, Any, Self, TypeVar
 
 import numpy as np
 import resfo
-import scipy.optimize
 from numpy import typing as npt
+
+from ._grid_cpp import find_cells_containing_points, point_in_cell
 
 
 class InvalidEgridFileError(ValueError):
@@ -133,6 +131,8 @@ class CornerpointGrid:
                 "zcorn and coord dimensions do not match:"
                 f" {self.zcorn.shape} vs {self.coord.shape}",
             )
+        self.coord = np.ascontiguousarray(self.coord, dtype=np.float32)
+        self.zcorn = np.ascontiguousarray(self.zcorn, dtype=np.float32)
 
     @classmethod
     def read_egrid(cls, file_like: str | os.PathLike[str] | IO[Any]) -> Self:
@@ -294,168 +294,19 @@ class CornerpointGrid:
             list of i,j,k indices for each point (or None if the
             point is not contained in any cell.
         """
-        points = np.asarray(points)
-        result: list[tuple[int, int, int] | None] = []
+        points = np.asarray(points, dtype=np.float32)
+        if len(points.shape) == 1:
+            points = points[np.newaxis, :]
+
         if map_coordinates and self.map_axes is not None:
             points = self.map_axes.transform_map_points(points)
 
-        dims = self.zcorn.shape[0:3]
-        top = self._pillars_z_plane_intersection(self.zcorn.min())
-        bot = self._pillars_z_plane_intersection(self.zcorn.max())
-
-        # This algorithm will for each point p calculate the mesh surface that
-        # is the intersection of the pillars with the plane z=p[2]. Then it searches
-        # through the quad with a heuristical search that orders each neighbour by
-        # the points manhattan distance to the bounding box.
-        found = False
-        # The use case that the previous point is close to the
-        # next point is very common, so we optimize for that.
-        prev_ij = None  # The i,j index the previous point was found at
-
-        @dataclass
-        class Quad:
-            """The quad at index i,j"""
-
-            i: int
-            j: int
-            p: npt.NDArray[np.float32]
-            i_neighbourhood: int
-            j_neighbourhood: int
-            intersection: npt.NDArray[np.float32]
-
-            @cached_property
-            def vertices(self) -> npt.NDArray[np.float32]:
-                return np.array(
-                    [
-                        top[self.i, self.j],
-                        top[self.i + 1, self.j],
-                        top[self.i + 1, self.j + 1],
-                        top[self.i, self.j + 1],
-                        bot[self.i, self.j],
-                        bot[self.i + 1, self.j],
-                        bot[self.i + 1, self.j + 1],
-                        bot[self.i, self.j + 1],
-                    ],
-                    dtype=np.float32,
-                )
-
-            @cached_property
-            def distance_from_bounds(self) -> np.float32:
-                """Manhattan distance from the point to the quad bounding box."""
-                vertices = self.vertices
-                min_x, min_y = vertices.min(axis=0)
-                max_x, max_y = vertices.max(axis=0)
-                x_dist = max(min_x - self.p[0], self.p[0] - max_x, 0)
-                y_dist = max(min_y - self.p[1], self.p[1] - max_y, 0)
-                return x_dist + y_dist
-
-            @cached_property
-            def distance_intersection_center(self) -> np.float32:
-                corners = np.array(
-                    [
-                        self.intersection[self.i, self.j],
-                        self.intersection[self.i + 1, self.j],
-                        self.intersection[self.i + 1, self.j + 1],
-                        self.intersection[self.i, self.j + 1],
-                    ],
-                )
-                center_x, center_y = corners.mean(axis=0)
-                x_dist = abs(center_x - self.p[0])
-                y_dist = abs(center_y - self.p[1])
-                return x_dist + y_dist
-
-            def __lt__(self, other: object) -> bool:
-                """Used to order elements in the search queue.
-
-                The Quads are ordered by distance_intersection_center.
-                """
-                if not isinstance(other, Quad):
-                    return False
-                return bool(
-                    self.distance_intersection_center
-                    < other.distance_intersection_center,
-                )
-
-        if dims[0] <= 0 or dims[1] <= 0:
-            return [None] * len(points)
-
-        for p in points:
-            intersection = self._pillars_z_plane_intersection(p[2])
-            found = False
-            if prev_ij is None:
-                queue = [
-                    Quad(
-                        dims[0] // 2,
-                        dims[1] // 2,
-                        p,
-                        dims[0] // 2,
-                        dims[1] // 2,
-                        intersection,
-                    ),
-                ]
-            else:
-                queue = [Quad(*prev_ij, p, 1, 1, intersection)]
-            visited = set([(queue[0].i, queue[0].j)])
-            while queue:
-                node = heapq.heappop(queue)
-                i = node.i
-                j = node.j
-
-                # If the quad contains the point then search through each k index
-                # for that quad
-                if node.distance_from_bounds <= 2 * tolerance:
-                    for k in range(dims[2]):
-                        zcorn = self.zcorn[i, j, k]
-                        z = p[2]
-                        # Prune by bounding box first then check whether point_in_cell
-                        if (
-                            zcorn.min() - 2 * tolerance
-                            <= z
-                            <= zcorn.max() + 2 * tolerance
-                            and self.point_in_cell(
-                                p,
-                                i,
-                                j,
-                                k,
-                                tolerance=tolerance,
-                                map_coordinates=False,
-                            )
-                        ):
-                            prev_ij = (i, j)
-                            result.append((i, j, k))
-                            found = True
-                            break
-                if found:
-                    break
-
-                # Add each neighbour to the queue if not visited
-                size_i = node.i_neighbourhood
-                for di in (-1 * size_i, 0, size_i):
-                    ni = i + di
-                    if ni < 0 or ni >= dims[0]:
-                        continue
-                    size_j = node.j_neighbourhood
-                    for dj in (-1 * size_j, 0, size_j):
-                        nj = j + dj
-                        if nj < 0 or nj >= dims[1]:
-                            continue
-                        if (ni, nj) not in visited:
-                            heapq.heappush(
-                                queue,
-                                Quad(
-                                    ni,
-                                    nj,
-                                    p,
-                                    max(size_i // 2, 1),
-                                    max(size_j // 2, 1),
-                                    intersection,
-                                ),
-                            )
-                            visited.add((ni, nj))
-            if not found:
-                result.append(None)
-
-        return result
+        return find_cells_containing_points(
+            np.ascontiguousarray(points),
+            self.coord,
+            self.zcorn,
+            tolerance,
+        )
 
     def cell_corners(self, i: int, j: int, k: int) -> npt.NDArray[np.float32]:
         """Array of coordinates for all corners of the cell at i,j,k
@@ -523,70 +374,21 @@ class CornerpointGrid:
             Array of boolean values for each triplet describing whether
             it is contained in the cell.
         """
-        points = np.asarray(points)
+        points = np.asarray(points, dtype=np.float32)
         if len(points.shape) == 1:
             points = points[np.newaxis, :]
         if map_coordinates and self.map_axes is not None:
             points = self.map_axes.transform_map_points(points)
 
-        vertices = self.cell_corners(i, j, k)
-
-        corner_signs = np.array(
-            [
-                [-1, -1, -1],
-                [1, -1, -1],
-                [-1, 1, -1],
-                [1, 1, -1],
-                [-1, -1, 1],
-                [1, -1, 1],
-                [-1, 1, 1],
-                [1, 1, 1],
-            ],
+        return point_in_cell(
+            np.ascontiguousarray(points),
+            i,
+            j,
+            k,
+            self.coord,
+            self.zcorn,
+            tolerance,
         )
-
-        def residual(
-            point: tuple[float, float, float],
-        ) -> Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]:
-            def inner(
-                xi_eta_zeta: npt.NDArray[np.float64],
-            ) -> npt.NDArray[np.float64]:
-                xi, eta, zeta = xi_eta_zeta
-                shape_matrix = (
-                    1
-                    / 8
-                    * (1 + xi * corner_signs[:, 0])
-                    * (1 + eta * corner_signs[:, 1])
-                    * (1 + zeta * corner_signs[:, 2])
-                )
-                mapped = shape_matrix @ vertices
-                return mapped - point
-
-            return inner
-
-        solutions = []
-        for point in points:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                initial_guess = (
-                    2 * (point - vertices[0]) / (vertices[7] - vertices[0]) - 1
-                )
-                initial_guess = np.clip(initial_guess, -1, 1)
-            np.nan_to_num(initial_guess, copy=False)
-            sol = scipy.optimize.least_squares(
-                residual(point),
-                initial_guess,
-                method="trf",
-            )
-            if not sol.success:
-                solutions.append(False)
-            else:
-                solutions.append(
-                    bool(
-                        np.all(np.abs(sol.x) <= 1.0 + tolerance)
-                        and np.linalg.norm(residual(point)(sol.x)) <= tolerance,
-                    ),
-                )
-        return np.array(solutions, dtype=np.bool_)
 
     def _pillars_z_plane_intersection(self, z: np.float32) -> npt.NDArray[np.float32]:
         shape = self.coord.shape

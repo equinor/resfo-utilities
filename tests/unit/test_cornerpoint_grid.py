@@ -571,6 +571,8 @@ def test_point_in_cell_considers_cells_as_trilinear_shapes(bottom_heights, x, y,
     # numerical issues
     assume(np.abs(z) >= 0.01)
     assume(np.abs(bottom_face_depth(x, y) - z) >= 0.01)
+    assume(np.abs(x - 1) >= 0.01 or np.abs(x + 1) >= 0.01)
+    assume(np.abs(y - 1) >= 0.01 or np.abs(y + 1) >= 0.01)
 
     # only the bottom face is different from the bounding box
     # so containment is the same as the conjunction of the two conditions
@@ -648,21 +650,66 @@ def single_cell_grids(draw):
 
     for i in range(coord.shape[0]):
         for j in range(coord.shape[1]):
-            bot_pillar_z = np.float32(coord[i, j, 0, 2] + 0.1)
-            coord[i, j, 1] = draw(
+            for k in range(2):
+                for c in range(3):
+                    min_v = 0
+                    if i > 0:
+                        min_v = max(min_v, coord[i - 1, j, k, c])
+                    if j > 0:
+                        min_v = max(min_v, coord[i, j - 1, k, c])
+                    if i > 0 and j > 0:
+                        min_v = max(min_v, coord[i - 1, j - 1, k, c])
+                    if k > 0:
+                        min_v = max(min_v, coord[i, j, k - 1, c])
+                    coord[i, j, k, c] = draw(
+                        from_dtype(
+                            np.dtype(np.float32),
+                            **{
+                                **nice_elements,
+                                **dict(min_value=min_v, max_value=2**14),
+                            },
+                        ),
+                    )
+    zcorn = draw(arrays(np.float32, (1, 1, 1, 8), elements=nice_elements))
+    r = 0
+    # z is increasing depth values
+
+    # First four z corner values can be anywhere between the endpoints
+    # of the corresponding pillar
+    for j in (0, 1):
+        for i in (0, 1):
+            zcorn[0, 0, 0, r] = draw(
                 from_dtype(
                     np.dtype(np.float32),
                     **{
                         **nice_elements,
-                        **dict(min_value=bot_pillar_z, max_value=2**14),
+                        **dict(
+                            min_value=coord[i, j, 0, 2],
+                            max_value=coord[i, j, 1, 2],
+                        ),
                     },
                 ),
             )
+            r += 1
+    # Last four z corner values need to be atleast the z value of the corresponding top
+    # corner and no more than the bottom of the corresponding pillar
+    for j in (0, 1):
+        for i in (0, 1):
+            zcorn[0, 0, 0, r] = draw(
+                from_dtype(
+                    np.dtype(np.float32),
+                    **{
+                        **nice_elements,
+                        **dict(
+                            min_value=zcorn[0, 0, 0, r - 4],
+                            max_value=coord[i, j, 1, 2],
+                        ),
+                    },
+                ),
+            )
+            r += 1
 
-    grid = CornerpointGrid(
-        coord=coord,
-        zcorn=draw(arrays(np.float32, (1, 1, 1, 8), elements=nice_elements)),
-    )
+    grid = CornerpointGrid(coord=coord, zcorn=zcorn)
     try:
         grid.cell_corners(0, 0, 0)
     except InvalidGridError:
@@ -750,3 +797,72 @@ def test_that_in_single_cell_grids_found_and_contains_are_the_same(
         0,
         0,
     )
+
+
+def test_that_point_is_found_in_simple_regular_grid():
+    grid = CornerpointGrid(
+        coord=np.array(
+            [
+                [
+                    [[2.0, 2.0, 2.0], [2.0, 2.0, 3.0]],
+                    [[3.0, 2.0, 2.0], [3.0, 2.0, 3.0]],
+                ],
+                [
+                    [[2.0, 3.0, 2.0], [2.0, 3.0, 3.0]],
+                    [[3.0, 3.0, 2.0], [3.0, 3.0, 3.0]],
+                ],
+            ],
+            dtype=np.float32,
+        ),
+        zcorn=np.array(
+            [[[[2.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0]]]],
+            dtype=np.float32,
+        ),
+        map_axes=None,
+    )
+    assert grid.find_cell_containing_point((2.1, 2.1, 2.1)) == [(0, 0, 0)]
+    assert grid.find_cell_containing_point((4.0, 4.0, 4.0)) == [None]
+
+
+def test_that_point_is_found_in_triangular_cell():
+    # grid where one side has its height collapsed
+    grid = CornerpointGrid(
+        coord=np.array(
+            [
+                [
+                    [[2.0, 2.0, 2.0], [2.0, 2.0, 3.0]],
+                    [[3.0, 2.0, 2.0], [3.0, 2.0, 3.0]],
+                ],
+                [
+                    [[2.0, 3.0, 2.0], [2.0, 3.0, 3.0]],
+                    [[3.0, 3.0, 2.0], [3.0, 3.0, 3.0]],
+                ],
+            ],
+            dtype=np.float32,
+        ),
+        zcorn=np.array(
+            [[[[2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0]]]],
+            dtype=np.float32,
+        ),
+        map_axes=None,
+    )
+    assert grid.find_cell_containing_point((2.1, 2.1, 2.1)) == [(0, 0, 0)]
+    assert grid.find_cell_containing_point((3.0, 3.0, 2.0)) == [None]
+
+
+def test_that_point_is_found_in_line_segment():
+    # grid cell where all but one point is in origo
+    # which means it has zero volume and is just
+    # a line segment
+    grid = CornerpointGrid(
+        coord=np.array(
+            [
+                [[[0, 0, 0], [0, 0, 1]], [[0, 0, 0], [0, 0, 1]]],
+                [[[0, 0, 0], [0, 0, 1]], [[0, 0, 0], [0, 0, 1]]],
+            ],
+            dtype=np.float32,
+        ),
+        zcorn=np.array([[[[0, 0, 0, 0, 0, 0, 0, 1]]]], dtype=np.float32),
+    )
+    assert grid.find_cell_containing_point((0.0, 0.0, 1.0)) == [(0, 0, 0)]
+    assert grid.find_cell_containing_point((3.0, 3.0, 2.0)) == [None]
