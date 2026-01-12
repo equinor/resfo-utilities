@@ -14,7 +14,7 @@ std::optional<CellIndex> grid_search(
     const std::vector<float>& top, const std::vector<float>& bot, float tolerance,
     std::optional<std::pair<int, int>> prev_ij) {
 
-    float bound_tol = tolerance*10.0;
+    float bound_tol = 20.0*tolerance;
 
     if (dims.ni <= 0 || dims.nj <= 0) {
         return std::nullopt;
