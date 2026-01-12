@@ -39,20 +39,16 @@ std::vector<std::optional<std::tuple<int, int, int>>> find_cells_containing_poin
         static_cast<int>(zcorn_shape[2])
     };
 
-    float z_min = zcorn[0];
-    float z_max = zcorn[0];
-    for (long int i = 1; i < zcorn_buf.size; ++i) {
-        z_min = std::min(z_min, zcorn[i]);
-        z_max = std::max(z_max, zcorn[i]);
-    }
+    auto [z_min, z_max] = std::minmax_element(zcorn, zcorn + zcorn_buf.size);
 
-    auto top_intersection = resfo::pillar_z_intersection(coord, dims, z_min);
-    auto bot_intersection = resfo::pillar_z_intersection(coord, dims, z_max);
-
-    std::vector<std::optional<std::tuple<int, int, int>>> results;
-    std::optional<std::pair<int, int>> prev_ij;
+    auto top_intersection = resfo::pillar_z_intersection(coord, dims, *z_min);
+    auto bot_intersection = resfo::pillar_z_intersection(coord, dims, *z_max);
 
     size_t num_points = points_buf.shape[0];
+    std::vector<std::optional<std::tuple<int, int, int>>> results;
+    results.reserve(num_points);
+    std::optional<std::pair<int, int>> prev_ij;
+
     for (size_t p_idx = 0; p_idx < num_points; ++p_idx) {
         Eigen::Vector3d p{
             points[p_idx * 3],

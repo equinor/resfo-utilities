@@ -42,15 +42,9 @@ std::optional<CellIndex> grid_search(
         if (dist_from_bounds <= 2 * bound_tol) {
             for (int k = 0; k < dims.nk; ++k) {
                 int zcorn_idx = (i * dims.nj * dims.nk + j * dims.nk + k) * NUM_CORNERS;
-                float z_min = zcorn[zcorn_idx];
-                float z_max = zcorn[zcorn_idx];
+                auto [z_min, z_max] = std::minmax_element(zcorn + zcorn_idx, zcorn + zcorn_idx + NUM_CORNERS);
 
-                for (int z_idx = 1; z_idx < NUM_CORNERS; ++z_idx) {
-                    z_min = std::min(z_min, zcorn[zcorn_idx + z_idx]);
-                    z_max = std::max(z_max, zcorn[zcorn_idx + z_idx]);
-                }
-
-                if (p[2] >= z_min - 2 * bound_tol && p[2] <= z_max + 2 * bound_tol) {
+                if (p[2] >= *z_min - 2 * bound_tol && p[2] <= *z_max + 2 * bound_tol) {
                     if (resfo::point_in_cell(p, i, j, k, coord, zcorn, dims, tolerance)) {
                         return CellIndex{i, j, k};
                     }
