@@ -49,9 +49,9 @@ else()
 endif()
 
 if(MSVC)
-    target_compile_options(_grid_cpp PRIVATE /O2 /W4)
+    target_compile_options(_grid_cpp PRIVATE /W4)
 else()
-    target_compile_options(_grid_cpp PRIVATE -O3 -Wall -Wextra -Wpedantic)
+    target_compile_options(_grid_cpp PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 # Install the extension module
