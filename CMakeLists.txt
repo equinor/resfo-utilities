@@ -32,6 +32,7 @@ FetchContent_Declare(
   GIT_TAG 2.2.0
 )
 set(MINIGLOG ON CACHE BOOL "Build ceres-solver with miniglog")
+set(BUILD_BENCHMARKS OFF CACHE BOOL "Build ceres-solver without benchmarks")
 FetchContent_MakeAvailable(ceres)
 
 # Create the Python extension module
