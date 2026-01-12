@@ -51,7 +51,7 @@ public:
 
 private:
     float distance_intersection_center(const std::vector<float>& intersection,
-                                                const GridDimensions& dims) const {
+                                       const GridDimensions& dims) const {
         int idx_00 = (i * (dims.nj + 1) + j) * 2;
         int idx_10 = ((i + 1) * (dims.nj + 1) + j) * 2;
         int idx_11 = ((i + 1) * (dims.nj + 1) + (j + 1)) * 2;
@@ -89,8 +89,8 @@ inline std::vector<float> pillar_z_intersection(
 }
 
 inline float distance_from_bounds(const Eigen::Vector3d& p, const std::vector<float>& top,
-                                          const std::vector<float>& bot, int i, int j,
-                                          const GridDimensions& dims) {
+                                  const std::vector<float>& bot, int i, int j,
+                                  const GridDimensions& dims) {
     int idx_00 = (i * (dims.nj + 1) + j) * 2;
     int idx_10 = ((i + 1) * (dims.nj + 1) + j) * 2;
     int idx_11 = ((i + 1) * (dims.nj + 1) + (j + 1)) * 2;

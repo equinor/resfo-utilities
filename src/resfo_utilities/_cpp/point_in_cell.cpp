@@ -94,7 +94,7 @@ struct HexInverseCost : ceres::CostFunction {
 };
 
 std::vector<double> cell_corners(int i, int j, int k, const float* coord, const float* zcorn,
-                                  const GridDimensions& dims) {
+                                 const GridDimensions& dims) {
     std::vector<double> vertices(24, 0.0);
 
     // Pillar indices for the four corners of the cell (i,j)
