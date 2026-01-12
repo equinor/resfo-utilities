@@ -30,6 +30,12 @@ struct PairHash {
     }
 };
 
+/* The GridSearch algorithm is a search of QuadNodes. Each QuadNode describes a
+ * pillar at (i,j) in the grid (see the docstring CornerpointGrid). The QuadNodes
+ * are visited in order of a heuristic. This heuristic is calculated by first
+ * finding the intersection of the plane z=p[2] and the pillars. This gives
+ * a quad Q(i,j). The heuristic is the manhattan distance from p to center(Q(i,j)).
+ */
 class QuadNode {
 public:
     int i;
@@ -50,6 +56,7 @@ public:
     }
 
 private:
+    /* The distance from p to Q(i,j). */
     float distance_intersection_center(const std::vector<float>& intersection,
                                        const GridDimensions& dims) const {
         int idx_00 = (i * (dims.nj + 1) + j) * 2;
@@ -66,6 +73,7 @@ private:
     }
 };
 
+/* The intersection of the pillars defined by coord and the plane z*/
 inline std::vector<float> pillar_z_intersection(
     const float* coord, const GridDimensions& dims, float z) {
     int num_pillars = (dims.ni + 1) * (dims.nj + 1);
