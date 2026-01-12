@@ -154,7 +154,7 @@ bool point_in_cell(const Eigen::Vector3d& point, int i, int j, int k, const floa
     }
 
 
-    HexInverseCost* cost_function = new HexInverseCost(corners, point);
+    HexInverseCost* cost_function = new HexInverseCost(std::move(corners), point);
 
     problem.AddResidualBlock(
         cost_function,
