@@ -56,12 +56,12 @@ std::optional<CellIndex> grid_search(
         }
 
         int size_i = node.i_neighbourhood;
-        for (int di : {-1 * size_i, 0, size_i}) {
+        for (int di : {-1 * size_i, -1, 0, 1, size_i}) {
             int ni = i + di;
             if (ni < 0 || ni >= dims.ni) continue;
 
             int size_j = node.j_neighbourhood;
-            for (int dj : {-1 * size_j, 0, size_j}) {
+            for (int dj : {-1 * size_j, -1, 0, 1, size_j}) {
                 int nj = j + dj;
                 if (nj < 0 || nj >= dims.nj) continue;
 
