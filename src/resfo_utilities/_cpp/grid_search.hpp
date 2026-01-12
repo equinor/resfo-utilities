@@ -4,8 +4,9 @@
 #include <optional>
 #include <vector>
 #include <algorithm>
-#include <Eigen/Dense>
 #include <array>
+
+#include <Eigen/Dense>
 
 namespace resfo {
 

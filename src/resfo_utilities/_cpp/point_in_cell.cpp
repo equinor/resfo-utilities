@@ -1,6 +1,8 @@
 #include "point_in_cell.hpp"
+
 #include <cmath>
 #include <array>
+
 #include <Eigen/Dense>
 #include "ceres/ceres.h"
 

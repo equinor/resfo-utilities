@@ -1,6 +1,6 @@
 #pragma once
-
 #include "grid_search.hpp"
+
 #include <Eigen/Dense>
 
 namespace resfo {

@@ -1,8 +1,11 @@
 #include "grid_search.hpp"
-#include "point_in_cell.hpp"
+
 #include <unordered_set>
 #include <queue>
 #include <vector>
+#include <functional>
+
+#include "point_in_cell.hpp"
 
 namespace resfo {
 
