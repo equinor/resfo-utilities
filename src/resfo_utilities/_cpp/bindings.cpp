@@ -7,9 +7,9 @@
 namespace py = pybind11;
 
 std::vector<std::optional<std::tuple<int, int, int>>> find_cells_containing_points(
-    py::array_t<float> points_array,
-    py::array_t<float> coord_array,
-    py::array_t<float> zcorn_array,
+    py::array_t<float, py::array::c_style | py::array::forcecast> points_array,
+    py::array_t<float, py::array::c_style | py::array::forcecast> coord_array,
+    py::array_t<float, py::array::c_style | py::array::forcecast> zcorn_array,
     float tolerance) {
 
     auto points_buf = points_array.request();
@@ -72,10 +72,10 @@ std::vector<std::optional<std::tuple<int, int, int>>> find_cells_containing_poin
 }
 
 py::array_t<bool> point_in_cell_wrapper(
-    py::array_t<float> points_array,
+    py::array_t<float, py::array::c_style | py::array::forcecast> points_array,
     int i, int j, int k,
-    py::array_t<float> coord_array,
-    py::array_t<float> zcorn_array,
+    py::array_t<float, py::array::c_style | py::array::forcecast> coord_array,
+    py::array_t<float, py::array::c_style | py::array::forcecast> zcorn_array,
     float tolerance) {
 
     auto points_buf = points_array.request();
