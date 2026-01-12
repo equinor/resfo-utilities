@@ -114,9 +114,7 @@ std::vector<double> cell_corners(int i, int j, int k, const float* coord, const 
 
     int zcorn_idx = (i * dims.nj * dims.nk + j * dims.nk + k) * NUM_CORNERS;
     std::array<float, NUM_CORNERS> z_values;
-    for (int z_idx = 0; z_idx < NUM_CORNERS; ++z_idx) {
-        z_values[z_idx] = zcorn[zcorn_idx + z_idx];
-    }
+    std::copy_n(zcorn + zcorn_idx, NUM_CORNERS, z_values.begin());
 
     // The zcorn ordering is: TSW, TSE, TNW, TNE, BSW, BSE, BNW, BNE
     // where SW = (i,j), SE = (i+1,j), NW = (i,j+1), NE = (i+1,j+1)
