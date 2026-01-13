@@ -27,8 +27,8 @@ struct HexInverseCost : ceres::CostFunction {
     }};
 
     public:
-    HexInverseCost(const std::vector<double> v, const Eigen::Vector3d& p)
-        : corners(v), point(p) {
+    HexInverseCost(std::vector<double>&& v, const Eigen::Vector3d& p)
+        : corners(std::move(v)), point(p) {
         set_num_residuals(3);
         *mutable_parameter_block_sizes() = {3};
         }
