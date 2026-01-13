@@ -1,7 +1,6 @@
 name: Publish Python 🐍 distributions 📦 to PyPI
 
 on:
-  pull_request:
   push:
     tags:
       - '*'
@@ -60,21 +59,21 @@ jobs:
           name: cibw-sdist
           path: dist/*.tar.gz
 
-  #publish:
-  #  needs: [build_wheels, build_sdist]
-  #  environment:
-  #    name: pypi
-  #    url: https://pypi.org/p/resfo-utilities
-  #  runs-on: ubuntu-latest
-  #  permissions:
-  #    id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
+  publish:
+    needs: [build_wheels, build_sdist]
+    environment:
+      name: pypi
+      url: https://pypi.org/p/resfo-utilities
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
 
-  #  steps:
-  #    - uses: actions/download-artifact@v4
-  #      with:
-  #        pattern: cibw-*
-  #        path: dist
-  #        merge-multiple: true
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cibw-*
+          path: dist
+          merge-multiple: true
 
-  #    - name: Publish package distributions to PyPI
-  #      uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
