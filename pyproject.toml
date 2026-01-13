@@ -55,6 +55,8 @@ dev = [
     "scipy-stubs",
 ]
 
+[tool.setuptools_scm]
+
 [tool.scikit-build]
 minimum-version = "0.10"
 build-dir = "build/{wheel_tag}"
