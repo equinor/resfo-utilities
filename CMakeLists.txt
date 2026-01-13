@@ -16,7 +16,7 @@ if(NOT Eigen3_FOUND)
     FetchContent_Declare(
         Eigen
         GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
-        GIT_TAG 3.4.0
+        GIT_TAG 3147391d946bb4b6c68edd901f2add6ac1f31f8c # 3.4.0
         GIT_SHALLOW TRUE
     )
     set(EIGEN_BUILD_DOC OFF CACHE BOOL "" FORCE)
@@ -29,7 +29,7 @@ endif()
 FetchContent_Declare(
   ceres
   GIT_REPOSITORY https://github.com/ceres-solver/ceres-solver.git
-  GIT_TAG 2.2.0
+  GIT_TAG 85331393dc0dff09f6fb9903ab0c4bfa3e134b01 # 2.2.0 tag
 )
 set(MINIGLOG ON CACHE BOOL "Build ceres-solver with miniglog")
 set(BUILD_BENCHMARKS OFF CACHE BOOL "Build ceres-solver without benchmarks")
