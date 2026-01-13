@@ -29,6 +29,7 @@ jobs:
           CIBW_SKIP: "*-musllinux_*"
           CIBW_ARCHS_MACOS: "arm64"
           CIBW_ARCHS_LINUX: "x86_64"
+          CIBW_ARCHS_WINDOWS: "AMD64"
           CIBW_TEST_COMMAND: python -c "import resfo_utilities; from resfo_utilities._grid_cpp import find_cells_containing_points"
           CIBW_BUILD_VERBOSITY: 1
 
