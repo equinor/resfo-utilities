@@ -22,8 +22,6 @@ if(NOT Eigen3_FOUND)
     set(EIGEN_BUILD_DOC OFF CACHE BOOL "" FORCE)
     set(EIGEN_BUILD_PKGCONFIG OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(Eigen)
-    # Eigen and ceres creates the same target "unistall"
-    set_property(GLOBAL PROPERTY ALLOW_DUPLICATE_CUSTOM_TARGETS TRUE)
 endif()
 
 FetchContent_Declare(
@@ -33,6 +31,7 @@ FetchContent_Declare(
 )
 set(MINIGLOG ON CACHE BOOL "Build ceres-solver with miniglog")
 set(BUILD_BENCHMARKS OFF CACHE BOOL "Build ceres-solver without benchmarks")
+set(PROVIDE_UNINSTALL_TARGET OFF CACHE BOOL "Do not provide uninstall target")
 FetchContent_MakeAvailable(ceres)
 
 # Create the Python extension module
