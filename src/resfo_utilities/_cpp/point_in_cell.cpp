@@ -162,7 +162,7 @@ bool point_in_cell(const Eigen::Vector3d& point, int i, int j, int k, const floa
         xi_eta_zeta
     );
 
-    float tolerance_squared = tolerance * tolerance;
+    double tolerance_squared = static_cast<double>(tolerance) * static_cast<double>(tolerance);
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::DENSE_QR;
     options.minimizer_progress_to_stdout = false;
