@@ -76,9 +76,7 @@ select = [
     "B",
     "BLE",
     "COM",
-    "CPY",
     "DJ",
-    "DOC",
     "E",
     "ERA",
     "EXE",
@@ -117,6 +115,7 @@ select = [
     "W",
     "YTT",
 ]
+preview = true
 
 [tool.pytest.ini_options]
 addopts = "-ra --strict-markers"

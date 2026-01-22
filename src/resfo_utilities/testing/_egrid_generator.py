@@ -329,8 +329,12 @@ class EGrid:
             filelike: The egrid file to write to.
         """
         contents = []
-        contents.append(("FILEHEAD", self.file_head.to_egrid()))
-        contents.append(("GRIDUNIT", self.grid_unit.to_egrid()))  # type: ignore
+        contents.extend(
+            [
+                ("FILEHEAD", self.file_head.to_egrid()),
+                ("GRIDUNIT", self.grid_unit.to_egrid()),
+            ],
+        )  # type: ignore
         contents += self.global_grid.to_egrid()
         resfo.write(filelike, contents)
 
