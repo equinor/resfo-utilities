@@ -119,7 +119,7 @@ def test_inter_region_summary_format_contains_in_and_out_regions(keyword, name, 
 @given(name=valid_names)
 @pytest.mark.parametrize("keyword", ["BOPR", "BOSAT"])
 @pytest.mark.parametrize(
-    "nx,ny,number,indices",
+    ("nx", "ny", "number", "indices"),
     [
         (1, 1, 1, "1,1,1"),
         (2, 1, 2, "2,1,1"),
@@ -135,7 +135,7 @@ def test_block_summary_format_have_cell_index(keyword, number, indices, name, nx
 @given(name=valid_names)
 @pytest.mark.parametrize("keyword", ["COPR"])
 @pytest.mark.parametrize(
-    "nx,ny,number,indices",
+    ("nx", "ny", "number", "indices"),
     [
         (1, 1, 1, "1,1,1"),
         (2, 1, 2, "2,1,1"),
@@ -159,7 +159,7 @@ def test_completion_summary_format_have_cell_index_and_name(
 
 @pytest.mark.parametrize("keyword", ["LBWPR"])
 @pytest.mark.parametrize(
-    "li,lj,lk,lgr_name,indices",
+    ("li", "lj", "lk", "lgr_name", "indices"),
     [
         (1, 1, 1, "LGRNAME", "1,1,1"),
         (2, 1, 1, "LGRNAME", "2,1,1"),
@@ -185,7 +185,7 @@ def test_local_block_summary_format_have_cell_index_and_name(
 @given(name=valid_names, lgr_name=st.text())
 @pytest.mark.parametrize("keyword", ["LCOPR"])
 @pytest.mark.parametrize(
-    "li,lj,lk,indices",
+    ("li", "lj", "lk", "indices"),
     [
         (1, 1, 1, "1,1,1"),
         (2, 1, 1, "2,1,1"),
@@ -233,7 +233,7 @@ def test_is_rate_does_not_raise_error(key):
 
 @pytest.mark.parametrize(
     "opr_summary_variable",
-    ["FOPR", "FOPR", "GOPR", "WOPR", "COPR", "ROPR", "LCOPR"],
+    ["FOPR", "GOPR", "WOPR", "COPR", "ROPR", "LCOPR"],
 )
 def test_that_oil_production_rate_is_a_rate(opr_summary_variable):
     assert is_rate(opr_summary_variable)
@@ -241,7 +241,7 @@ def test_that_oil_production_rate_is_a_rate(opr_summary_variable):
 
 @pytest.mark.parametrize(
     "opt_summary_variable",
-    ["FOPT", "FOPT", "GOPT", "WOPT", "COPT", "ROPT", "LCOPT"],
+    ["FOPT", "GOPT", "WOPT", "COPT", "ROPT", "LCOPT"],
 )
 def test_that_oil_production_total_is_not_a_rate(opt_summary_variable):
     assert not is_rate(opt_summary_variable)
@@ -249,7 +249,7 @@ def test_that_oil_production_total_is_not_a_rate(opt_summary_variable):
 
 @pytest.mark.parametrize(
     "gpr_summary_variable",
-    ["FGPR", "FGPR", "GGPR", "WGPR", "CGPR", "RGPR", "LCGPR"],
+    ["FGPR", "GGPR", "WGPR", "CGPR", "RGPR", "LCGPR"],
 )
 def test_that_gas_production_rate_is_a_rate(gpr_summary_variable):
     assert is_rate(gpr_summary_variable)
@@ -257,7 +257,7 @@ def test_that_gas_production_rate_is_a_rate(gpr_summary_variable):
 
 @pytest.mark.parametrize(
     "opt_summary_variable",
-    ["FGPT", "FGPT", "GGPT", "WGPT", "CGPT", "RGPT", "LCGPT"],
+    ["FGPT", "GGPT", "WGPT", "CGPT", "RGPT", "LCGPT"],
 )
 def test_that_gas_production_total_is_not_a_rate(opt_summary_variable):
     assert not is_rate(opt_summary_variable)
@@ -265,7 +265,7 @@ def test_that_gas_production_total_is_not_a_rate(opt_summary_variable):
 
 @pytest.mark.parametrize(
     "gir_summary_variable",
-    ["FGIR", "FGIR", "GGIR", "WGIR", "CGIR", "RGIR", "LCGIR"],
+    ["FGIR", "GGIR", "WGIR", "CGIR", "RGIR", "LCGIR"],
 )
 def test_that_gas_injection_rate_is_a_rate(gir_summary_variable):
     assert is_rate(gir_summary_variable)
@@ -273,7 +273,7 @@ def test_that_gas_injection_rate_is_a_rate(gir_summary_variable):
 
 @pytest.mark.parametrize(
     "git_summary_variable",
-    ["FGIT", "FGIT", "GGIT", "WGIT", "CGIT", "RGIT", "LCGIT"],
+    ["FGIT", "GGIT", "WGIT", "CGIT", "RGIT", "LCGIT"],
 )
 def test_that_gas_injection_total_is_not_a_rate(git_summary_variable):
     assert not is_rate(git_summary_variable)
@@ -281,7 +281,7 @@ def test_that_gas_injection_total_is_not_a_rate(git_summary_variable):
 
 @pytest.mark.parametrize(
     "wpr_summary_variable",
-    ["FWPR", "FWPR", "GWPR", "WWPR", "CWPR", "RWPR", "LCWPR"],
+    ["FWPR", "GWPR", "WWPR", "CWPR", "RWPR", "LCWPR"],
 )
 def test_that_water_production_rate_is_a_rate(wpr_summary_variable):
     assert is_rate(wpr_summary_variable)
@@ -297,7 +297,7 @@ def test_that_water_production_total_is_not_a_rate(wpt_summary_variable):
 
 @pytest.mark.parametrize(
     "wir_summary_variable",
-    ["FWIR", "FWIR", "GWIR", "WWIR", "CWIR", "RWIR", "LCWIR"],
+    ["FWIR", "GWIR", "WWIR", "CWIR", "RWIR", "LCWIR"],
 )
 def test_that_water_injection_rate_is_a_rate(wir_summary_variable):
     assert is_rate(wir_summary_variable)
@@ -305,7 +305,7 @@ def test_that_water_injection_rate_is_a_rate(wir_summary_variable):
 
 @pytest.mark.parametrize(
     "wit_summary_variable",
-    ["FWIT", "FWIT", "GWIT", "WWIT", "CWIT", "RWIT", "LCWIT"],
+    ["FWIT", "GWIT", "WWIT", "CWIT", "RWIT", "LCWIT"],
 )
 def test_that_water_injection_total_is_not_a_rate(wit_summary_variable):
     assert not is_rate(wit_summary_variable)

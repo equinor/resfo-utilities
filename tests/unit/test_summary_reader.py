@@ -18,13 +18,13 @@ def test_that_summary_reader_can_be_initialized_with_either_path_or_io(tmp_path:
     (tmp_path / "CASE.FUNSMRY").touch()
     _ = SummaryReader(case_path=tmp_path / "CASE")
     _ = SummaryReader(smspec=StringIO, summaries=[StringIO])
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="must be initialized with either"):
         _ = SummaryReader(
             case_path=tmp_path,
             smspec=StringIO,
             summaries=[StringIO],
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="must be initialized with either"):
         _ = SummaryReader()
 
 
@@ -80,7 +80,7 @@ def read_summary(smspec, unsmry, report_step_only=True):
 
 
 @pytest.mark.parametrize(
-    "spec_contents, smry_contents, error_message",
+    ("spec_contents", "smry_contents", "error_message"),
     [
         (b"", b"", "Keyword startdat missing"),
         (b"1", b"1", "Summary files contained invalid contents"),
