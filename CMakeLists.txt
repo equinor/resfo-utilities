@@ -31,6 +31,8 @@ FetchContent_Declare(
 )
 set(MINIGLOG ON CACHE BOOL "Build ceres-solver with miniglog")
 set(BUILD_BENCHMARKS OFF CACHE BOOL "Build ceres-solver without benchmarks")
+set(BUILD_EXAMPLES OFF CACHE BOOL "Build ceres-solver without examples")
+set(BUILD_TESTING OFF CACHE BOOL "Build ceres-solver without tests")
 set(PROVIDE_UNINSTALL_TARGET OFF CACHE BOOL "Do not provide uninstall target")
 FetchContent_MakeAvailable(ceres)
 
