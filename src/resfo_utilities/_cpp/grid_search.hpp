@@ -117,8 +117,8 @@ inline float distance_from_bounds(const Eigen::Vector3d& p, const std::vector<fl
     auto [min_x, max_x] = std::minmax_element(vertices_x.begin(), vertices_x.end());
     auto [min_y, max_y] = std::minmax_element(vertices_y.begin(), vertices_y.end());
 
-    float x_dist = std::max({*min_x - p[0], p[0] - *max_x, 0.0});
-    float y_dist = std::max({*min_y - p[1], p[1] - *max_y, 0.0});
+    float x_dist = std::max({*min_x - static_cast<float>(p[0]), static_cast<float>(p[0]) - *max_x, 0.0f});
+    float y_dist = std::max({*min_y - static_cast<float>(p[1]), static_cast<float>(p[1]) - *max_y, 0.0f});
 
     return x_dist + y_dist;
 }
