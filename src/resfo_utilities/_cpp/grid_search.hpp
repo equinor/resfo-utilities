@@ -8,21 +8,9 @@
 
 #include <Eigen/Dense>
 
+#include "grid.hpp"
+
 namespace resfo {
-
-const int NUM_CORNERS = 8;
-
-struct GridDimensions {
-    int ni;
-    int nj;
-    int nk;
-};
-
-struct CellIndex {
-    int i;
-    int j;
-    int k;
-};
 
 struct PairHash {
     std::size_t operator()(const std::pair<int, int>& p) const {
