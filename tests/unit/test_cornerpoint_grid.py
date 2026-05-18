@@ -5,7 +5,7 @@ import hypothesis.strategies as st
 import numpy as np
 import pytest
 import resfo
-from hypothesis import assume, example, given
+from hypothesis import HealthCheck, assume, example, given, settings
 from hypothesis.extra.numpy import arrays, from_dtype
 from numpy.testing import assert_allclose
 
@@ -525,6 +525,7 @@ def test_that_point_in_cell_correctly_assign_vertices_to_faces():
     assert grid.find_cell_containing_point(point) == [(0, 0, 0)]
 
 
+@settings(suppress_health_check=[HealthCheck.filter_too_much])
 @given(*([st.floats(min_value=-1.0, max_value=2.0)] * 3))
 @pytest.mark.parametrize(
     "bottom_heights",
@@ -567,12 +568,12 @@ def test_point_in_cell_considers_cells_as_trilinear_shapes(bottom_heights, x, y,
     def in_bounding_box(point):
         return all(-1 * tolerance <= c <= 1 + tolerance for c in point)
 
-    # avoid points that is very close to the boundary to avoid
-    # numerical issues
+    # avoid points that are very close to the boundary to avoid
+    # numerical issues with the nonlinear solver
     assume(np.abs(z) >= 0.01)
     assume(np.abs(bottom_face_depth(x, y) - z) >= 0.01)
-    assume(np.abs(x - 1) >= 0.01 or np.abs(x + 1) >= 0.01)
-    assume(np.abs(y - 1) >= 0.01 or np.abs(y + 1) >= 0.01)
+    assume(np.abs(x) >= 0.01 and np.abs(x - 1) >= 0.01)
+    assume(np.abs(y) >= 0.01 and np.abs(y - 1) >= 0.01)
 
     # only the bottom face is different from the bounding box
     # so containment is the same as the conjunction of the two conditions
