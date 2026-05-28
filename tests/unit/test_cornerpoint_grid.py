@@ -788,6 +788,32 @@ def single_cell_grids(draw):
     ),
     point=(0.0, 0.0, 9.999999747378752e-06),
 ).via("discovered failure")
+@example(
+    grid=CornerpointGrid(
+        coord=np.array(
+            [
+                [
+                    [[0.0, -4.0, 0.0], [0.0, 4.0, 1.0]],
+                    [[1.0, -1.0, 0.0], [1.0, 1.0, 2.0]],
+                ],
+                [
+                    [[1.0, 10.0, 0.0], [1.0, 10.0, 1.0]],
+                    [[0.0, 10.0, 0.0], [0.0, 10.0, 1.0]],
+                ],
+            ],
+            dtype=np.float32,
+        ),
+        zcorn=np.array(
+            [[[[0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 2.0, 1.0]]]],
+            dtype=np.float32,
+        ),
+        map_axes=None,
+    ),
+    point=(0.528, -0.7, 0.5),
+).via(
+    "Discussed as counter-example in review."
+    "Point in cell, but not in xy-bounding box at z",
+)
 def test_that_in_single_cell_grids_found_and_contains_are_the_same(
     grid: CornerpointGrid,
     point: tuple[float, float, float],

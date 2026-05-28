@@ -1,13 +1,16 @@
 #include <algorithm>
+#include <limits>
 #include <optional>
 #include <stdexcept>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
+#include "column_interval_tree.hpp"
 #include "grid_search.hpp"
 #include "point_in_cell.hpp"
 
@@ -54,10 +57,6 @@ static GridArrays validate_and_extract(
     };
 }
 
-static Eigen::Vector3d point_at(const float* points, size_t idx) {
-    return Eigen::Vector3f::Map(&points[idx * 3]).cast<double>();
-}
-
 using CellResult = std::optional<std::tuple<int, int, int>>;
 
 static CellResult to_result(const std::optional<resfo::CellIndex>& r) {
@@ -72,20 +71,23 @@ std::vector<CellResult> find_cells_containing_points(
 {
     auto g = validate_and_extract(points_array, coord_array, zcorn_array);
 
-    auto [z_min, z_max] = std::minmax_element(g.zcorn, g.zcorn + g.zcorn_size);
-    auto top = resfo::pillar_z_intersection(g.coord, g.dims, *z_min);
-    auto bot = resfo::pillar_z_intersection(g.coord, g.dims, *z_max);
+    if (g.num_points == 0) return std::vector<CellResult>();
+
+    auto build_interval_tree = [&g]() {
+        auto [z_min, z_max] = std::minmax_element(g.zcorn, g.zcorn + g.zcorn_size);
+        auto bboxes = resfo::create_column_bounding_boxes(g.coord, g.dims, {*z_min, *z_max});
+        return resfo::ColumnIntervalTree(std::move(bboxes));
+    };
 
     std::vector<CellResult> results;
     results.reserve(g.num_points);
-    std::optional<std::pair<int, int>> prev_ij;
 
+    auto tree = build_interval_tree();
+    Eigen::Map<const Eigen::Matrix3Xf> point_map(g.points, 3, g.num_points);
     for (size_t i = 0; i < g.num_points; ++i) {
         auto r = resfo::grid_search(
-            point_at(g.points, i), g.coord, g.zcorn, g.dims, top, bot, tolerance, prev_ij);
-
+            point_map.col(i).cast<double>(), g.coord, g.zcorn, g.dims, tree, tolerance);
         results.push_back(to_result(r));
-        prev_ij = r ? std::make_optional(std::make_pair(r->i, r->j)) : std::nullopt;
     }
     return results;
 }
@@ -101,9 +103,10 @@ py::array_t<bool> point_in_cell_wrapper(
     auto result_buf = result.request();
     bool* result_ptr = static_cast<bool*>(result_buf.ptr);
 
+    Eigen::Map<const Eigen::Matrix3Xf> point_map(g.points, 3, g.num_points);
     for (size_t idx = 0; idx < g.num_points; ++idx) {
         result_ptr[idx] = resfo::point_in_cell(
-            point_at(g.points, idx), i, j, k, g.coord, g.zcorn, g.dims, tolerance);
+            point_map.col(idx).cast<double>(), i, j, k, g.coord, g.zcorn, g.dims, tolerance);
     }
     return result;
 }
