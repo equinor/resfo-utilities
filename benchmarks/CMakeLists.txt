@@ -62,6 +62,7 @@ set(CPP_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../src/resfo_utilities/_cpp)
 
 add_executable(bench_grid_search
     bench_grid_search.cpp
+    ${CPP_SRC}/column_interval_tree.cpp
     ${CPP_SRC}/point_in_cell.cpp
     ${CPP_SRC}/grid_search.cpp
 )

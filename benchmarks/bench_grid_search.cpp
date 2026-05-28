@@ -1,11 +1,10 @@
 #include <benchmark/benchmark.h>
-#include <utility>
 #include <vector>
 
 #include "grid_search.hpp"
+#include "column_interval_tree.hpp"
 #include "bench_helpers.hpp"
 
-using CellResult = std::optional<std::tuple<int, int, int>>;
 
 using PointSet = std::vector<Eigen::Vector3d>(*)(int, int, int, int, int);
 
@@ -24,25 +23,14 @@ static void BM_GridSearch(benchmark::State& state)
     MakeGrid(ni, nj, nk, coord, zcorn);
     resfo::GridDimensions dims{ni, nj, nk};
 
+    auto column_bboxes = resfo::create_column_bounding_boxes(coord.data(), dims, {0.0f, static_cast<float>(nk)});
+    resfo::ColumnIntervalTree tree(std::move(column_bboxes));
+
     auto points = MakePoints(ni, nj, nk, n_pts, n_pts_outside);
-
-    auto [z_min, z_max] = std::minmax_element(zcorn.begin(), zcorn.end());
-    auto top = resfo::pillar_z_intersection(coord.data(), dims, *z_min);
-    auto bot = resfo::pillar_z_intersection(coord.data(), dims, *z_max);
-
-    std::vector<CellResult> results;
-    results.reserve(points.size());
-    std::optional<std::pair<int, int>> prev_ij;
 
     for (auto _ : state) {
         for (const auto& p : points) {
-            auto r = resfo::grid_search(p, coord.data(), zcorn.data(), dims, top, bot, 1e-6f, prev_ij);
-            if (r.has_value())
-                results.push_back(std::make_tuple(r->i, r->j, r->k));
-            else
-                results.push_back(std::nullopt);
-
-            prev_ij = r ? std::make_optional(std::make_pair(r->i, r->j)) : std::nullopt;
+            auto r = resfo::grid_search(p, coord.data(), zcorn.data(), dims, tree, 1e-6f);
             benchmark::DoNotOptimize(r);
         }
     }

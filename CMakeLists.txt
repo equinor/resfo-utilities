@@ -40,6 +40,7 @@ FetchContent_MakeAvailable(ceres)
 pybind11_add_module(_grid_cpp
     src/resfo_utilities/_cpp/bindings.cpp
     src/resfo_utilities/_cpp/grid_search.cpp
+    src/resfo_utilities/_cpp/column_interval_tree.cpp
     src/resfo_utilities/_cpp/point_in_cell.cpp
 )
 
