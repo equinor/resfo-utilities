@@ -52,6 +52,7 @@ dev = [
     "pre-commit",
     "mypy",
     "pytest-benchmark",
+    "pytest-codspeed",
     "scipy-stubs",
 ]
 
