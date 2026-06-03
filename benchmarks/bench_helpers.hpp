@@ -21,7 +21,7 @@ inline void make_grid_regular(int ni, int nj, int nk,
                       std::vector<float>& coord,
                       std::vector<float>& zcorn)
 {
-    coord.resize((ni + 1) * (nj + 1) * 6);
+    coord.resize(static_cast<size_t>(ni + 1) * (nj + 1) * 6);
     for (int i = 0; i <= ni; ++i) {
         for (int j = 0; j <= nj; ++j) {
             int p = (i * (nj + 1) + j) * 6;
@@ -34,7 +34,7 @@ inline void make_grid_regular(int ni, int nj, int nk,
         }
     }
 
-    zcorn.resize(ni * nj * nk * 8);
+    zcorn.resize(static_cast<size_t>(ni) * nj * nk * 8);
     for (int i = 0; i < ni; ++i) {
         for (int j = 0; j < nj; ++j) {
             for (int k = 0; k < nk; ++k) {
@@ -56,7 +56,7 @@ inline void make_grid_tilted(int ni, int nj, int nk,
                               std::vector<float>& coord,
                               std::vector<float>& zcorn)
 {
-    coord.resize((ni + 1) * (nj + 1) * 6);
+    coord.resize(static_cast<size_t>(ni + 1) * (nj + 1) * 6);
     for (int i = 0; i <= ni; ++i) {
         for (int j = 0; j <= nj; ++j) {
             int p = (i * (nj + 1) + j) * 6;
@@ -69,7 +69,7 @@ inline void make_grid_tilted(int ni, int nj, int nk,
         }
     }
 
-    zcorn.resize(ni * nj * nk * 8);
+    zcorn.resize(static_cast<size_t>(ni) * nj * nk * 8);
     for (int i = 0; i < ni; ++i) {
         for (int j = 0; j < nj; ++j) {
             for (int k = 0; k < nk; ++k) {
@@ -89,7 +89,7 @@ inline void make_grid_faulted(int ni, int nj, int nk,
                                std::vector<float>& coord,
                                std::vector<float>& zcorn)
 {
-    coord.resize((ni + 1) * (nj + 1) * 6);
+    coord.resize(static_cast<size_t>(ni + 1) * (nj + 1) * 6);
     for (int i = 0; i <= ni; ++i) {
         for (int j = 0; j <= nj; ++j) {
             int p = (i * (nj + 1) + j) * 6;
@@ -102,7 +102,7 @@ inline void make_grid_faulted(int ni, int nj, int nk,
         }
     }
 
-    zcorn.resize(ni * nj * nk * 8);
+    zcorn.resize(static_cast<size_t>(ni) * nj * nk * 8);
     for (int i = 0; i < ni; ++i) {
         for (int j = 0; j < nj; ++j) {
             float offset = (j >= nj / 2) ? FAULT_THROW : 0.0f;

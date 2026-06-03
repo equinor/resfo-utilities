@@ -15,7 +15,7 @@ std::vector<ColumnBoundingBox> create_column_bounding_boxes(const float* coord,
                                                             const resfo::GridDimensions& dims,
                                                             const std::pair<float, float>& z_minmax) {
     std::vector<ColumnBoundingBox> boxes;
-    boxes.reserve(dims.ni * dims.nj);
+    boxes.reserve(static_cast<size_t>(dims.ni) * dims.nj);
     const auto& [z_min, z_max] = z_minmax;
 
     for (int i = 0; i < dims.ni; ++i) {
