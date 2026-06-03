@@ -5,6 +5,9 @@ project(resfo_benchmarks LANGUAGES CXX)
 # without Python, pybind11, or pip:
 #   cmake -S benchmarks -B build_bench -DCMAKE_BUILD_TYPE=Release
 #   cmake --build build_bench
+# For CodSpeed CI (CPU simulation mode):
+#   cmake -S benchmarks -B build_bench -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCODSPEED_MODE=simulation
+#   cmake --build build_bench
 # Eigen and Ceres are redeclared here because the root CMakeLists.txt
 # requires Python/pybind11 which we want to avoid for benchmark builds.
 
@@ -47,16 +50,20 @@ set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
 set(PROVIDE_UNINSTALL_TARGET OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(ceres)
 
-# Google Benchmark
+# Google Benchmark (via CodSpeed compatibility layer)
+# When CODSPEED_MODE is set (e.g. -DCODSPEED_MODE=simulation), benchmarks are
+# instrumented for CodSpeed. Without it, this behaves like regular google/benchmark.
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
+set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON CACHE BOOL "" FORCE)
 FetchContent_Declare(
-    googlebenchmark
-    GIT_REPOSITORY https://github.com/google/benchmark.git
-    GIT_TAG v1.9.1
+    google_benchmark
+    GIT_REPOSITORY https://github.com/CodSpeedHQ/codspeed-cpp.git
+    SOURCE_SUBDIR google_benchmark
+    GIT_TAG 1c22e59599485996c1c5711fef0dcbb7785747de # 2.3.0
     GIT_SHALLOW TRUE
 )
-FetchContent_MakeAvailable(googlebenchmark)
+FetchContent_MakeAvailable(google_benchmark)
 
 set(CPP_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../src/resfo_utilities/_cpp)
 
