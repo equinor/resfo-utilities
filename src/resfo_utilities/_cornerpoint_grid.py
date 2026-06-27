@@ -95,6 +95,28 @@ class MapAxes:
             ],
         )
 
+    def transform_grid_points(
+        self,
+        points: npt.NDArray[np.float32],
+    ) -> npt.NDArray[np.float32]:
+        """Transforms points from grid coordinates to map coordinates.
+
+        Returns:
+            The given grid points in the map coordinate system.
+        """
+        tx = points[:, 0]
+        ty = points[:, 1]
+        x_unit = self.x_unit()
+        y_unit = self.y_unit()
+
+        return np.column_stack(
+            [
+                tx * x_unit[0] + ty * y_unit[0] + self.origin[0],
+                tx * x_unit[1] + ty * y_unit[1] + self.origin[1],
+                points[:, 2],
+            ],
+        )
+
 
 @dataclass
 class CornerpointGrid:

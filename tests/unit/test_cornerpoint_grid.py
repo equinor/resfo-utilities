@@ -313,11 +313,21 @@ def test_that_points_on_faces_are_in_the_cell(unit_cell_grid):
 
 
 def test_that_transform_points_does_not_scale_by_map_axes():
+    # Map to grid
     assert MapAxes((0.0, 10.0), (0.0, 0.0), (1.0, 0.0)).transform_map_points(
         np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]]),
     ).tolist() == [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]]
 
     assert MapAxes((0.0, 1.0), (0.0, 0.0), (10.0, 0.0)).transform_map_points(
+        np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]]),
+    ).tolist() == [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]]
+
+    # Grid to map
+    assert MapAxes((0.0, 10.0), (0.0, 0.0), (1.0, 0.0)).transform_grid_points(
+        np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]]),
+    ).tolist() == [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]]
+
+    assert MapAxes((0.0, 1.0), (0.0, 0.0), (10.0, 0.0)).transform_grid_points(
         np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]]),
     ).tolist() == [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]]
 
@@ -328,6 +338,13 @@ def test_that_transform_points_translates_by_origin():
             np.array([[101.0, 50.0, 0.0], [100.0, 51.0, 0.0], [101.0, 51.0, 1.0]]),
         ),
         [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]],
+    )
+
+    assert_allclose(
+        MapAxes((100.0, 51.0), (100.0, 50.0), (101.0, 50.0)).transform_grid_points(
+            np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 1.0]]),
+        ),
+        [[101.0, 50.0, 0.0], [100.0, 51.0, 0.0], [101.0, 51.0, 1.0]],
     )
 
 
@@ -893,3 +910,51 @@ def test_that_point_is_found_in_line_segment():
     )
     assert grid.find_cell_containing_point((0.0, 0.0, 1.0)) == [(0, 0, 0)]
     assert grid.find_cell_containing_point((3.0, 3.0, 2.0)) == [None]
+
+
+finite_floats = st.floats(
+    min_value=-1e6,
+    max_value=1e6,
+    allow_nan=False,
+    allow_infinity=False,
+)
+coord_pair = st.tuples(finite_floats, finite_floats)
+
+
+@given(
+    origin=coord_pair,
+    x_axis=coord_pair,
+    y_axis=coord_pair,
+    map_points=arrays(
+        dtype=np.float32,
+        shape=st.tuples(st.integers(min_value=1, max_value=10), st.just(3)),
+        elements=st.floats(
+            min_value=-1e4,
+            max_value=1e4,
+            allow_nan=False,
+            allow_infinity=False,
+        ),
+    ),
+)
+def test_that_roundtrip_map_grid_translation_results_in_the_same(
+    origin,
+    x_axis,
+    y_axis,
+    map_points,
+):
+    # Assume axes vectors are not 0,0
+    assume(abs(x_axis[0]) >= 1e-6 or abs(x_axis[1]) >= 1e-6)
+    assume(abs(y_axis[0]) >= 1e-6 or abs(y_axis[1]) >= 1e-6)
+
+    map_axes = MapAxes(y_axis=y_axis, origin=origin, x_axis=x_axis)
+
+    x_unit = map_axes.x_unit()
+    y_unit = map_axes.y_unit()
+    det = x_unit[0] * y_unit[1] - x_unit[1] * y_unit[0]
+    # Assume that axes are not parallel
+    assume(abs(det) > 1e-6)
+
+    grid_points = map_axes.transform_map_points(map_points)
+    transformed_map_points = map_axes.transform_grid_points(grid_points)
+
+    assert_allclose(transformed_map_points, map_points, atol=1e-3)
