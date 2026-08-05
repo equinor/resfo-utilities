@@ -1055,3 +1055,126 @@ def test_that_roundtrip_map_grid_translation_results_in_the_same(
     transformed_map_points = map_axes.transform_grid_points(grid_points)
 
     assert_allclose(transformed_map_points, map_points, atol=1e-3)
+
+
+def regular_grid(ni, nj, nk, actnum=None):
+    """A grid of unit cubes where cell i,j,k has its center at (i+.5, j+.5, k+.5)"""
+    coord = np.zeros((ni + 1, nj + 1, 2, 3), dtype=np.float32)
+    for i, j in product(range(ni + 1), range(nj + 1)):
+        coord[i, j] = [[i, j, 0], [i, j, nk]]
+    zcorn = np.zeros((ni, nj, nk, 8), dtype=np.float32)
+    for k in range(nk):
+        zcorn[:, :, k] = [k] * 4 + [k + 1] * 4
+    return CornerpointGrid(coord, zcorn, actnum=actnum)
+
+
+def cell_centers(grid):
+    cells = list(np.ndindex(grid.zcorn.shape[:3]))
+    return cells, np.array(cells, dtype=np.float32) + 0.5
+
+
+def actnum_egrid(actnum, dims=(2, 3, 4)):
+    n = dims[0] * dims[1] * dims[2]
+    return write_to_buffer(
+        [
+            ("FILEHEAD", pad_to([3, 2007, 0, 0, 0, 0, 1], 100)),
+            ("GRIDHEAD", pad_to([1, *dims], 100)),
+            ("COORD   ", np.arange(0, 6 * (dims[0] + 1) * (dims[1] + 1), dtype=">f4")),
+            ("ZCORN   ", np.arange(0, 8 * n, dtype=">f4")),
+            ("ACTNUM  ", np.asarray(actnum, dtype=">i4")),
+            ("ENDGRID ", np.array([], dtype=">i4")),
+        ],
+    )
+
+
+def test_that_read_egrid_does_not_read_actnum_by_default():
+    assert CornerpointGrid.read_egrid(actnum_egrid(np.zeros(24))).actnum is None
+
+
+def test_that_read_egrid_reads_actnum_with_i_cycling_fastest():
+    grid = CornerpointGrid.read_egrid(
+        actnum_egrid(np.arange(24)),
+        read_actnum=True,
+    )
+    assert grid.actnum.shape == (2, 3, 4)
+    for i, j, k in np.ndindex(2, 3, 4):
+        assert grid.actnum[i, j, k] == i + 2 * j + 6 * k
+
+
+def test_that_read_egrid_raises_invalid_egrid_file_when_actnum_has_wrong_size():
+    with pytest.raises(InvalidEgridFileError, match="ACTNUM size 7 did not match"):
+        CornerpointGrid.read_egrid(actnum_egrid(np.ones(7)), read_actnum=True)
+
+
+def test_that_grid_with_actnum_and_zcorn_shape_mismatch_raises():
+    with pytest.raises(InvalidGridError, match="actnum and zcorn dimensions"):
+        regular_grid(2, 3, 4, actnum=np.ones((4, 3, 2), dtype=np.int32))
+
+
+@pytest.mark.parametrize("seed", range(5))
+def test_that_only_active_cells_are_found_by_default(seed):
+    actnum = np.random.default_rng(seed).integers(0, 3, size=(4, 3, 5))
+    grid = regular_grid(4, 3, 5, actnum=actnum)
+    cells, centers = cell_centers(grid)
+
+    assert grid.find_cell_containing_point(centers) == [
+        cell if actnum[cell] != 0 else None for cell in cells
+    ]
+
+
+def test_that_no_cells_are_found_when_all_cells_are_inactive():
+    grid = regular_grid(2, 3, 4, actnum=np.zeros((2, 3, 4), dtype=np.int32))
+    cells, centers = cell_centers(grid)
+
+    assert grid.find_cell_containing_point(centers) == [None] * len(cells)
+
+
+@pytest.mark.parametrize("seed", range(5))
+@pytest.mark.parametrize("has_actnum", [True, False])
+def test_that_cell_mask_selects_the_cells_that_can_be_found(seed, has_actnum):
+    rng = np.random.default_rng(seed)
+    actnum = rng.integers(0, 2, size=(4, 3, 5)) if has_actnum else None
+    grid = regular_grid(4, 3, 5, actnum=actnum)
+    cell_mask = rng.integers(0, 2, size=(4, 3, 5)) != 0
+    cells, centers = cell_centers(grid)
+
+    assert grid.find_cell_containing_point(centers, cell_mask=cell_mask) == [
+        cell if cell_mask[cell] else None for cell in cells
+    ]
+
+
+def test_that_inactive_cells_are_found_when_cell_mask_selects_all_cells():
+    grid = regular_grid(2, 3, 4, actnum=np.zeros((2, 3, 4), dtype=np.int32))
+    cells, centers = cell_centers(grid)
+
+    assert (
+        grid.find_cell_containing_point(
+            centers,
+            cell_mask=np.ones((2, 3, 4), dtype=bool),
+        )
+        == cells
+    )
+
+
+def test_that_masked_cells_do_not_hide_overlapping_cells():
+    grid = regular_grid(1, 1, 2)
+    grid.zcorn[0, 0, :] = [0, 0, 0, 0, 2, 2, 2, 2]
+    point = (0.5, 0.5, 1.0)
+
+    assert grid.find_cell_containing_point(
+        point,
+        cell_mask=np.array([[[True, False]]]),
+    ) == [(0, 0, 0)]
+    assert grid.find_cell_containing_point(
+        point,
+        cell_mask=np.array([[[False, True]]]),
+    ) == [(0, 0, 1)]
+
+
+def test_that_cell_mask_with_wrong_shape_raises():
+    grid = regular_grid(2, 3, 4)
+    with pytest.raises(ValueError, match="cell_mask had shape"):
+        grid.find_cell_containing_point(
+            (0.5, 0.5, 0.5),
+            cell_mask=np.ones((4, 3, 2), dtype=bool),
+        )

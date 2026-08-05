@@ -18,6 +18,7 @@
 namespace py = pybind11;
 
 using FloatArray = py::array_t<float, py::array::c_style | py::array::forcecast>;
+using BoolArray = py::array_t<bool, py::array::c_style | py::array::forcecast>;
 
 // Validated grid arrays extracted from numpy buffers.
 struct GridArrays {
@@ -67,26 +68,57 @@ static CellResult to_result(const std::optional<resfo::CellIndex>& r) {
 
 std::vector<CellResult> find_cells_containing_points(
     FloatArray points_array, FloatArray coord_array, FloatArray zcorn_array,
-    float tolerance)
+    float tolerance, std::optional<BoolArray> cell_mask_array)
 {
     auto g = validate_and_extract(points_array, coord_array, zcorn_array);
 
+    const bool* cell_mask = nullptr;
+    if (cell_mask_array.has_value()) {
+        auto mask_buf = cell_mask_array->request();
+        if (mask_buf.ndim != 3 || mask_buf.shape[0] != g.dims.ni
+            || mask_buf.shape[1] != g.dims.nj || mask_buf.shape[2] != g.dims.nk)
+            throw std::runtime_error("Cell mask array must have shape (ni, nj, nk)");
+        cell_mask = static_cast<const bool*>(mask_buf.ptr);
+    }
+
     if (g.num_points == 0) return std::vector<CellResult>();
 
-    auto build_interval_tree = [&g]() {
-        auto [z_min, z_max] = std::minmax_element(g.zcorn, g.zcorn + g.zcorn_size);
-        auto bboxes = resfo::create_column_bounding_boxes(g.coord, g.dims, {*z_min, *z_max});
-        return resfo::ColumnIntervalTree(std::move(bboxes));
-    };
+    // The z-range the column bounding boxes must cover. With a cell mask,
+    // only the selected cells contribute, giving tighter boxes.
+    auto z_range = [&g, cell_mask]() -> std::optional<std::pair<float, float>> {
+        if (g.zcorn_size == 0) return std::nullopt;
+        if (cell_mask == nullptr) {
+            auto [z_min, z_max] = std::minmax_element(g.zcorn, g.zcorn + g.zcorn_size);
+            return std::make_pair(*z_min, *z_max);
+        }
+        float z_min = std::numeric_limits<float>::max();
+        float z_max = std::numeric_limits<float>::lowest();
+        bool any_selected = false;
+        const size_t num_cells = g.zcorn_size / resfo::NUM_CORNERS;
+        for (size_t c = 0; c < num_cells; ++c) {
+            if (!cell_mask[c]) continue;
+            any_selected = true;
+            const float* cell = g.zcorn + c * resfo::NUM_CORNERS;
+            auto [lo, hi] = std::minmax_element(cell, cell + resfo::NUM_CORNERS);
+            z_min = std::min(z_min, *lo);
+            z_max = std::max(z_max, *hi);
+        }
+        if (!any_selected) return std::nullopt;
+        return std::make_pair(z_min, z_max);
+    }();
+
+    if (!z_range.has_value()) return std::vector<CellResult>(g.num_points);
 
     std::vector<CellResult> results;
     results.reserve(g.num_points);
 
-    auto tree = build_interval_tree();
+    resfo::ColumnIntervalTree tree(
+        resfo::create_column_bounding_boxes(g.coord, g.dims, *z_range, cell_mask));
     Eigen::Map<const Eigen::Matrix3Xf> point_map(g.points, 3, g.num_points);
     for (size_t i = 0; i < g.num_points; ++i) {
         auto r = resfo::grid_search(
-            point_map.col(i).cast<double>(), g.coord, g.zcorn, g.dims, tree, tolerance);
+            point_map.col(i).cast<double>(), g.coord, g.zcorn, g.dims, tree, tolerance,
+            cell_mask);
         results.push_back(to_result(r));
     }
     return results;
@@ -119,6 +151,7 @@ PYBIND11_MODULE(_grid_cpp, m) {
           py::arg("coord"),
           py::arg("zcorn"),
           py::arg("tolerance") = 1e-6f,
+          py::arg("cell_mask") = py::none(),
           "Find cells containing given points");
 
     m.def("point_in_cell", &point_in_cell_wrapper,

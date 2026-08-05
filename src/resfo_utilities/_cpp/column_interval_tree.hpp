@@ -27,7 +27,10 @@ struct ColumnBoundingBox {
 std::vector<ColumnBoundingBox> create_column_bounding_boxes(
     const float* coord,
     const resfo::GridDimensions& dims,
-    const std::pair<float, float>& z_minmax
+    const std::pair<float, float>& z_minmax,
+    // Optional (ni, nj, nk) mask. Columns without any selected cell get no
+    // bounding box and are thereby excluded from the search.
+    const bool* cell_mask = nullptr
 );
 
 // 1D interval tree over ColumnBoundingBox with secondary-axis filtering.

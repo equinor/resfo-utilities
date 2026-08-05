@@ -13,13 +13,20 @@ namespace resfo {
 // entire grid depth.
 std::vector<ColumnBoundingBox> create_column_bounding_boxes(const float* coord,
                                                             const resfo::GridDimensions& dims,
-                                                            const std::pair<float, float>& z_minmax) {
+                                                            const std::pair<float, float>& z_minmax,
+                                                            const bool* cell_mask) {
     std::vector<ColumnBoundingBox> boxes;
     boxes.reserve(static_cast<size_t>(dims.ni) * dims.nj);
     const auto& [z_min, z_max] = z_minmax;
 
     for (int i = 0; i < dims.ni; ++i) {
         for (int j = 0; j < dims.nj; ++j) {
+            if (cell_mask != nullptr) {
+                const bool* column = cell_mask
+                    + (static_cast<size_t>(i) * dims.nj + j) * dims.nk;
+                if (std::none_of(column, column + dims.nk, [](bool b) { return b; }))
+                    continue;
+            }
             const std::array<int, 4> pillar_idx{
                 (i * (dims.nj + 1) + j) *  6,
                 (i * (dims.nj + 1) + (j + 1)) * 6,
