@@ -599,6 +599,44 @@ def test_point_in_cell_considers_cells_as_trilinear_shapes(bottom_heights, x, y,
     )
 
 
+def test_that_cell_corners_returns_the_corners_of_the_cell():
+    # unit cell grid with map axes
+    # translating origin to 100, 100 and rotating the axes by 90 degrees
+    grid = CornerpointGrid(
+        coord=np.array(
+            [
+                [[[0, 0, 0], [0, 0, 1]], [[0, 1, 0], [0, 1, 1]]],
+                [[[1, 0, 0], [1, 0, 1]], [[1, 1, 0], [1, 1, 1]]],
+            ],
+            dtype=np.float32,
+        ),
+        zcorn=np.array([[[[0, 0, 0, 0, 1, 1, 1, 1]]]], dtype=np.float32),
+        map_axes=MapAxes((101.0, 100.0), (100.0, 100.0), (100.0, 99.0)),
+    )
+
+    # By default points are returned in the grid coordinate system
+    assert grid.cell_corners(0, 0, 0).tolist() == [
+        [0, 0, 0],
+        [1, 0, 0],
+        [0, 1, 0],
+        [1, 1, 0],
+        [0, 0, 1],
+        [1, 0, 1],
+        [0, 1, 1],
+        [1, 1, 1],
+    ]
+    assert grid.cell_corners(0, 0, 0, map_coordinates=True).tolist() == [
+        [100, 100, 0],
+        [100, 99, 0],
+        [101, 100, 0],
+        [101, 99, 0],
+        [100, 100, 1],
+        [100, 99, 1],
+        [101, 100, 1],
+        [101, 99, 1],
+    ]
+
+
 def test_that_zero_height_pillar_is_invalid():
     grid = CornerpointGrid(
         coord=np.array(

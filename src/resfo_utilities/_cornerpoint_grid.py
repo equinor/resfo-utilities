@@ -336,8 +336,21 @@ class CornerpointGrid:
             tolerance,
         )
 
-    def cell_corners(self, i: int, j: int, k: int) -> npt.NDArray[np.float32]:
+    def cell_corners(
+        self,
+        i: int,
+        j: int,
+        k: int,
+        map_coordinates: bool = False,  # defaults to false for backwards compatibility
+    ) -> npt.NDArray[np.float32]:
         """Array of coordinates for all corners of the cell at i,j,k
+
+        Param:
+            i,j,k:
+                The indices of the cell to get the corners for.
+            map_coordinates:
+                Whether the returned coordinates should be in the map coordinate system.
+                Defaults to false.
 
         The order of the corners are the same as in zcorn.
         """
@@ -366,14 +379,17 @@ class CornerpointGrid:
 
         t = (self.zcorn[i, j, k] - twice(top_z)) / height_diff
 
-        result = twice(top) + t[:, np.newaxis] * twice(bot - top)
+        points = twice(top) + t[:, np.newaxis] * twice(bot - top)
 
-        if not np.all(np.isfinite(result)):
+        if map_coordinates and self.map_axes is not None:
+            points = self.map_axes.transform_grid_points(points)
+
+        if not np.all(np.isfinite(points)):
             raise InvalidGridError(
-                f"The corners of the cell at {i, j, k} is not well defined",
+                f"The corners of the cell at {i, j, k} are not well defined",
             )
 
-        return result
+        return points
 
     def point_in_cell(
         self,
