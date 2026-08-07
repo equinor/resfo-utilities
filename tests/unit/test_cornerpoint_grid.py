@@ -646,7 +646,7 @@ def test_that_cells_with_infinite_pillars_are_invalid():
         map_axes=None,
     )
 
-    with pytest.raises(InvalidGridError, match="The corners of the cell"):
+    with pytest.raises(InvalidGridError, match="The corners of cell"):
         grid.cell_corners(0, 0, 0)
 
 
@@ -958,3 +958,177 @@ def test_that_roundtrip_map_grid_translation_results_in_the_same(
     transformed_map_points = map_axes.transform_grid_points(grid_points)
 
     assert_allclose(transformed_map_points, map_points, atol=1e-3)
+
+
+def _unit_cube_grid(map_axes: MapAxes | None = None) -> CornerpointGrid:
+    """A 1x1x1 corner-point grid whose only cell is the unit cube [0,1]^3."""
+    return CornerpointGrid(
+        coord=np.array(
+            [
+                [[[0, 0, 0], [0, 0, 1]], [[0, 1, 0], [0, 1, 1]]],
+                [[[1, 0, 0], [1, 0, 1]], [[1, 1, 0], [1, 1, 1]]],
+            ],
+            dtype=np.float32,
+        ),
+        zcorn=np.array([[[[0, 0, 0, 0, 1, 1, 1, 1]]]], dtype=np.float32),
+        map_axes=map_axes,
+    )
+
+
+def test_that_cell_corners_returns_expected_corners_in_zcorn_order():
+    grid = _unit_cube_grid()
+
+    corners = grid.cell_corners(0, 0, 0)
+
+    # Order in zcorn: [TSW, TSE, TNW, TNE, BSW, BSE, BNW, BNE]
+    # N = higher y, E = higher x, T = lower z.
+    expected = np.array(
+        [
+            [0, 0, 0],  # TSW
+            [1, 0, 0],  # TSE
+            [0, 1, 0],  # TNW
+            [1, 1, 0],  # TNE
+            [0, 0, 1],  # BSW
+            [1, 0, 1],  # BSE
+            [0, 1, 1],  # BNW
+            [1, 1, 1],  # BNE
+        ],
+        dtype=np.float32,
+    )
+    assert_allclose(corners, expected)
+
+
+def test_that_cell_corners_interpolates_xy_along_tilted_pillars():
+    # Pillars go from (x, y, 0) at the top to (x + 2, y, 10) at the bottom,
+    # so at pillar parameter t the point is (x + 2*t, y, 10*t).
+    grid = CornerpointGrid(
+        coord=np.array(
+            [
+                [[[0, 0, 0], [2, 0, 10]], [[0, 1, 0], [2, 1, 10]]],
+                [[[1, 0, 0], [3, 0, 10]], [[1, 1, 0], [3, 1, 10]]],
+            ],
+            dtype=np.float32,
+        ),
+        # Top corners at z=0 (t=0), bottom corners split: SW/NW at z=5 (t=0.5)
+        # and SE/NE at z=10 (t=1.0).
+        zcorn=np.array(
+            [[[[0, 0, 0, 0, 5, 10, 5, 10]]]],
+            dtype=np.float32,
+        ),
+    )
+
+    corners = grid.cell_corners(0, 0, 0)
+
+    expected = np.array(
+        [
+            [0, 0, 0],  # TSW: pillar (0,0) at t=0
+            [1, 0, 0],  # TSE: pillar (1,0) at t=0
+            [0, 1, 0],  # TNW: pillar (0,1) at t=0
+            [1, 1, 0],  # TNE: pillar (1,1) at t=0
+            [1, 0, 5],  # BSW: pillar (0,0) at t=0.5
+            [3, 0, 10],  # BSE: pillar (1,0) at t=1.0
+            [1, 1, 5],  # BNW: pillar (0,1) at t=0.5
+            [3, 1, 10],  # BNE: pillar (1,1) at t=1.0
+        ],
+        dtype=np.float32,
+    )
+    assert_allclose(corners, expected)
+
+
+def test_that_cell_corners_returns_map_coordinates_when_requested():
+    # Map axes translating origin to (100, 100) (unit orientation).
+    map_axes = MapAxes((100.0, 101.0), (100.0, 100.0), (101.0, 100.0))
+    grid = _unit_cube_grid(map_axes=map_axes)
+
+    grid_corners = grid.cell_corners(0, 0, 0, map_coordinates=False)
+    map_corners = grid.cell_corners(0, 0, 0, map_coordinates=True)
+
+    assert_allclose(map_corners, map_axes.transform_grid_points(grid_corners))
+    # Sanity: default keeps the previous grid-coordinate behavior.
+    assert_allclose(grid.cell_corners(0, 0, 0), grid_corners)
+
+
+def test_that_cell_center_returns_mean_of_cell_corners():
+    grid = _unit_cube_grid()
+
+    center = grid.cell_center(0, 0, 0)
+
+    assert_allclose(center, [0.5, 0.5, 0.5])
+    assert_allclose(center, grid.cell_corners(0, 0, 0).mean(axis=0))
+
+
+def test_that_cell_center_applies_map_axes_when_requested():
+    map_axes = MapAxes((100.0, 101.0), (100.0, 100.0), (101.0, 100.0))
+    grid = _unit_cube_grid(map_axes=map_axes)
+
+    center = grid.cell_center(0, 0, 0, map_coordinates=True)
+
+    expected = map_axes.transform_grid_points(
+        grid.cell_corners(0, 0, 0).mean(axis=0)[np.newaxis, :],
+    )[0]
+    assert_allclose(center, expected)
+
+
+def _two_cell_grid() -> CornerpointGrid:
+    """A 2x1x1 grid whose cells are the unit cubes at x in [0,1] and [1,2]."""
+    return CornerpointGrid(
+        coord=np.array(
+            [
+                [[[0, 0, 0], [0, 0, 1]], [[0, 1, 0], [0, 1, 1]]],
+                [[[1, 0, 0], [1, 0, 1]], [[1, 1, 0], [1, 1, 1]]],
+                [[[2, 0, 0], [2, 0, 1]], [[2, 1, 0], [2, 1, 1]]],
+            ],
+            dtype=np.float32,
+        ),
+        zcorn=np.array(
+            [
+                [[[0, 0, 0, 0, 1, 1, 1, 1]]],
+                [[[0, 0, 0, 0, 1, 1, 1, 1]]],
+            ],
+            dtype=np.float32,
+        ),
+    )
+
+
+def test_that_cell_corners_batch_matches_per_cell_cell_corners():
+    grid = _two_cell_grid()
+
+    i = np.array([0, 1])
+    j = np.array([0, 0])
+    k = np.array([0, 0])
+
+    batch = grid.cell_corners(i, j, k)
+
+    assert batch.shape == (2, 8, 3)
+    assert_allclose(batch[0], grid.cell_corners(0, 0, 0))
+    assert_allclose(batch[1], grid.cell_corners(1, 0, 0))
+
+
+def test_that_cell_corners_batch_applies_map_axes_when_requested():
+    map_axes = MapAxes((100.0, 101.0), (100.0, 100.0), (101.0, 100.0))
+    grid = _two_cell_grid()
+    grid.map_axes = map_axes
+
+    i = np.array([0, 1])
+    j = np.array([0, 0])
+    k = np.array([0, 0])
+
+    map_batch = grid.cell_corners(i, j, k, map_coordinates=True)
+
+    for row, (ii, jj, kk) in enumerate(zip(i, j, k, strict=True)):
+        expected = map_axes.transform_grid_points(grid.cell_corners(ii, jj, kk))
+        assert_allclose(map_batch[row], expected)
+
+
+def test_that_cell_center_batch_matches_per_cell_cell_center():
+    grid = _two_cell_grid()
+
+    i = np.array([0, 1])
+    j = np.array([0, 0])
+    k = np.array([0, 0])
+
+    batch = grid.cell_center(i, j, k)
+
+    assert batch.shape == (2, 3)
+    assert_allclose(batch[0], grid.cell_center(0, 0, 0))
+    assert_allclose(batch[1], grid.cell_center(1, 0, 0))

@@ -336,44 +336,135 @@ class CornerpointGrid:
             tolerance,
         )
 
-    def cell_corners(self, i: int, j: int, k: int) -> npt.NDArray[np.float32]:
-        """Array of coordinates for all corners of the cell at i,j,k
+    def cell_corners(
+        self,
+        i: npt.ArrayLike,
+        j: npt.ArrayLike,
+        k: npt.ArrayLike,
+        map_coordinates: bool = False,
+    ) -> npt.NDArray[np.float32]:
+        """Coordinates of the corners of one or more cells.
 
-        The order of the corners are the same as in zcorn.
+        Accepts either scalar indices ``i``, ``j``, ``k`` or 1-D index arrays
+        of the same length ``N``. When called with scalars, returns an array
+        of shape ``(8, 3)`` with the corners of the single cell at ``i, j, k``.
+        When called with arrays, returns an array of shape ``(N, 8, 3)`` with
+        one row per cell. The order of the corners for each cell is the same
+        as in ``zcorn``.
+
+        Args:
+            map_coordinates:
+                Whether the returned coordinates should be in the map
+                coordinate system. Defaults to False.
         """
-        pillar_vertices = np.concatenate(
+        scalar = np.ndim(i) == 0 and np.ndim(j) == 0 and np.ndim(k) == 0
+        i = np.atleast_1d(np.asarray(i))
+        j = np.atleast_1d(np.asarray(j))
+        k = np.atleast_1d(np.asarray(k))
+
+        # Pillar top/bot points in [SW, SE, NW, NE] order, matching zcorn layout.
+        top = np.stack(
             [
-                self.coord[i, j, :],
-                self.coord[i, j + 1, :],
-                self.coord[i + 1, j, :],
-                self.coord[i + 1, j + 1, :],
+                self.coord[i, j, 0, :],
+                self.coord[i + 1, j, 0, :],
+                self.coord[i, j + 1, 0, :],
+                self.coord[i + 1, j + 1, 0, :],
             ],
+            axis=1,
         )
-        top = pillar_vertices[::2][[0, 2, 1, 3]]
-        bot = pillar_vertices[1::2][[0, 2, 1, 3]]
-        top_z = top[:, 2]
-        bot_z = bot[:, 2]
-
-        def twice(a: npt.NDArray[Any]) -> npt.NDArray[Any]:
-            return np.concatenate([a, a])
-
-        height_diff = twice(bot_z - top_z)
+        bot = np.stack(
+            [
+                self.coord[i, j, 1, :],
+                self.coord[i + 1, j, 1, :],
+                self.coord[i, j + 1, 1, :],
+                self.coord[i + 1, j + 1, 1, :],
+            ],
+            axis=1,
+        )
+        top_z = top[..., 2]
+        bot_z = bot[..., 2]
+        height_diff = np.concatenate([bot_z - top_z, bot_z - top_z], axis=1)
 
         if np.any(height_diff == 0):
+            bad = np.flatnonzero(np.any(height_diff == 0, axis=1))
+            bad_cells = list(
+                zip(
+                    i[bad].tolist(),
+                    j[bad].tolist(),
+                    k[bad].tolist(),
+                    strict=True,
+                ),
+            )
             raise InvalidGridError(
-                f"Grid contains zero height pillars with different for cell {i, j, k}",
+                f"Grid contains zero height pillars for cells {bad_cells}",
             )
 
-        t = (self.zcorn[i, j, k] - twice(top_z)) / height_diff
+        top_z_doubled = np.concatenate([top_z, top_z], axis=1)
+        zcorn_vals = self.zcorn[i, j, k]
+        t = (zcorn_vals - top_z_doubled) / height_diff
 
-        result = twice(top) + t[:, np.newaxis] * twice(bot - top)
+        top_doubled = np.concatenate([top, top], axis=1)
+        diff_doubled = np.concatenate([bot - top, bot - top], axis=1)
+        result = top_doubled + t[..., np.newaxis] * diff_doubled
 
         if not np.all(np.isfinite(result)):
+            bad = np.flatnonzero(np.any(~np.isfinite(result), axis=(1, 2)))
+            bad_cells = list(
+                zip(
+                    i[bad].tolist(),
+                    j[bad].tolist(),
+                    k[bad].tolist(),
+                    strict=True,
+                ),
+            )
             raise InvalidGridError(
-                f"The corners of the cell at {i, j, k} is not well defined",
+                f"The corners of cells {bad_cells} are not well defined",
             )
 
+        if map_coordinates and self.map_axes is not None:
+            n = result.shape[0]
+            result = self.map_axes.transform_grid_points(
+                result.reshape(n * 8, 3),
+            ).reshape(n, 8, 3)
+
+        if scalar:
+            return result[0]
         return result
+
+    def cell_center(
+        self,
+        i: npt.ArrayLike,
+        j: npt.ArrayLike,
+        k: npt.ArrayLike,
+        map_coordinates: bool = False,
+    ) -> npt.NDArray[np.float32]:
+        """Coordinates of the center of one or more cells.
+
+        The center is the mean of the eight corner vertices of a cell.
+        Accepts either scalar indices ``i``, ``j``, ``k`` or 1-D index arrays
+        of the same length ``N``. When called with scalars, returns an array
+        of shape ``(3,)`` with the center of the single cell at ``i, j, k``.
+        When called with arrays, returns an array of shape ``(N, 3)`` with
+        one row per cell.
+
+        Args:
+            map_coordinates:
+                Whether the returned coordinates should be in the map
+                coordinate system. Defaults to False.
+        """
+        scalar = np.ndim(i) == 0 and np.ndim(j) == 0 and np.ndim(k) == 0
+        corners = self.cell_corners(
+            np.atleast_1d(np.asarray(i)),
+            np.atleast_1d(np.asarray(j)),
+            np.atleast_1d(np.asarray(k)),
+            map_coordinates=False,
+        )
+        centers = corners.mean(axis=1)
+        if map_coordinates and self.map_axes is not None:
+            centers = self.map_axes.transform_grid_points(centers)
+        if scalar:
+            return centers[0]
+        return centers
 
     def point_in_cell(
         self,
