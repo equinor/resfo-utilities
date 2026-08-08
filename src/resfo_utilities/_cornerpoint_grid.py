@@ -146,6 +146,7 @@ class CornerpointGrid:
     coord: npt.NDArray[np.float32]
     zcorn: npt.NDArray[np.float32]
     map_axes: MapAxes | None = None
+    actnum: npt.NDArray[np.float32] | None = None
 
     def __post_init__(self) -> None:
         if len(self.coord.shape) != 4 or self.coord.shape[2:4] != (2, 3):
@@ -161,6 +162,17 @@ class CornerpointGrid:
             )
         self.coord = np.ascontiguousarray(self.coord, dtype=np.float32)
         self.zcorn = np.ascontiguousarray(self.zcorn, dtype=np.float32)
+        if self.actnum is not None:
+            if len(self.actnum.shape) != 3:
+                raise InvalidGridError(
+                    f"actnum had invalid dimensions {self.actnum.shape}",
+                )
+            if self.actnum.shape != self.zcorn.shape[:3]:
+                raise InvalidGridError(
+                    "actnum and zcorn dimensions do not match:"
+                    f" {self.actnum.shape} vs {self.zcorn.shape[:3]}",
+                )
+            self.actnum = np.ascontiguousarray(self.actnum, dtype=np.float32)
 
     @classmethod
     def read_egrid(cls, file_like: str | os.PathLike[str] | IO[Any]) -> Self:
@@ -190,6 +202,7 @@ class CornerpointGrid:
         opened = False
         stream = None
         map_axes = None
+        actnum = None
 
         try:
             if isinstance(file_like, str):
@@ -262,6 +275,8 @@ class CornerpointGrid:
                             (array[2], array[3]),
                             (array[4], array[5]),
                         )
+                    case "ACTNUM  ":
+                        actnum = validate_array(kw, entry.read_array())
                     case "ENDGRID ":
                         break
 
@@ -298,7 +313,15 @@ class CornerpointGrid:
                 f"ZCORN size {len(zcorn)} did not match"
                 f" grid dimensions {dims} in {filename}",
             ) from err
-        return cls(coord, zcorn, map_axes)
+        if actnum is not None:
+            try:
+                actnum = actnum.reshape((dims[0], dims[1], dims[2]), order="F")
+            except ValueError as err:
+                raise InvalidEgridFileError(
+                    f"ACTNUM size {len(actnum)} did not match"
+                    f" grid dimensions {dims} in {filename}",
+                ) from err
+        return cls(coord, zcorn, map_axes, actnum)
 
     def find_cell_containing_point(
         self,
