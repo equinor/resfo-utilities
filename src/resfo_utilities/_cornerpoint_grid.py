@@ -370,16 +370,25 @@ class CornerpointGrid:
         def twice(a: npt.NDArray[Any]) -> npt.NDArray[Any]:
             return np.concatenate([a, a])
 
+        zcorn = self.zcorn[i, j, k]
         height_diff = twice(bot_z - top_z)
-
-        if np.any(height_diff == 0):
+        zero_height = height_diff == 0
+        same_xy = twice(np.all(top[:, :2] == bot[:, :2], axis=1))
+        if np.any(zero_height & ~same_xy):
             raise InvalidGridError(
-                f"Grid contains zero height pillars with different for cell {i, j, k}",
+                f"Grid contains zero height pillars with different x/y coordinates"
+                f" for cell {i, j, k}",
             )
 
-        t = (self.zcorn[i, j, k] - twice(top_z)) / height_diff
+        t = np.divide(
+            zcorn - twice(top_z),
+            height_diff,
+            out=np.zeros_like(height_diff),
+            where=~zero_height,
+        )
 
         points = twice(top) + t[:, np.newaxis] * twice(bot - top)
+        points[zero_height, 2] = zcorn[zero_height]
 
         if map_coordinates and self.map_axes is not None:
             points = self.map_axes.transform_grid_points(points)

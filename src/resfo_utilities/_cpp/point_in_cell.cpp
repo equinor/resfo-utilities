@@ -127,7 +127,9 @@ std::vector<double> cell_corners(int i, int j, int k, const float* coord, const 
         const auto& p_bot = bot[p_idx];
 
         float height_diff = p_bot[2] - p_top[2];
-        float t = (z_values[v] - p_top[2]) / height_diff;
+        float t = p_top == p_bot
+            ? 0.0f
+            : (z_values[v] - p_top[2]) / height_diff;
 
         vertices[v * 3] = p_top[0] + t * (p_bot[0] - p_top[0]);
         vertices[v * 3 + 1] = p_top[1] + t * (p_bot[1] - p_top[1]);
