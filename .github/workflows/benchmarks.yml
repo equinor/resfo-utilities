@@ -36,7 +36,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           enable-cache: true
           python-version: "3.12"
@@ -45,7 +45,7 @@ jobs:
         run: uv sync --extra dev --extra testing
 
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@f99becdce5e5d51fd556489ebef684f4ecfd6286 # v4.18.5
+        uses: CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea # v5.2.1
         with:
           mode: simulation
           run: uv run pytest tests/performance/ --codspeed
@@ -89,7 +89,7 @@ jobs:
           cmake --build build_bench --parallel 2
 
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@f99becdce5e5d51fd556489ebef684f4ecfd6286 # v4.18.5
+        uses: CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea # v5.2.1
         with:
           mode: simulation
           run: |
