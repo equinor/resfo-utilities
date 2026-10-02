@@ -637,29 +637,88 @@ def test_that_cell_corners_returns_the_corners_of_the_cell():
     ]
 
 
-def test_that_zero_height_pillar_is_invalid():
-    grid = CornerpointGrid(
-        coord=np.array(
-            [
-                [
-                    [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
-                    [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
-                ],
-                [
-                    [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
-                    [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
-                ],
-            ],
-            dtype=np.float32,
-        ),
-        zcorn=np.array(
-            [[[[0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]]]],
-            dtype=np.float32,
-        ),
-        map_axes=None,
-    )
-    with pytest.raises(InvalidGridError, match="Grid contains zero height pillars"):
-        grid.cell_corners(0, 0, 0)
+@pytest.fixture(params=[False, True], ids=["one-pillar", "all-pillars"])
+def grid_with_coincident_pillars(unit_cell_grid, request):
+    if request.param:
+        unit_cell_grid.coord[:, :, 1] = unit_cell_grid.coord[:, :, 0]
+    else:
+        unit_cell_grid.coord[1, 1, 1] = unit_cell_grid.coord[1, 1, 0]
+    unit_cell_grid.zcorn += 1
+    return unit_cell_grid
+
+
+def test_that_coincident_pillars_define_vertical_cell_corners(
+    grid_with_coincident_pillars,
+):
+    assert grid_with_coincident_pillars.cell_corners(0, 0, 0).tolist() == [
+        [0, 0, 1],
+        [1, 0, 1],
+        [0, 1, 1],
+        [1, 1, 1],
+        [0, 0, 2],
+        [1, 0, 2],
+        [0, 1, 2],
+        [1, 1, 2],
+    ]
+
+
+def test_that_cells_with_coincident_pillars_can_be_found(grid_with_coincident_pillars):
+    points = [(0.5, 0.5, 1.5), (0.5, 0.5, 2.5)]
+
+    assert grid_with_coincident_pillars.point_in_cell(points, 0, 0, 0).tolist() == [
+        True,
+        False,
+    ]
+    assert grid_with_coincident_pillars.find_cell_containing_point(points) == [
+        (0, 0, 0),
+        None,
+    ]
+
+
+@pytest.mark.parametrize(
+    "bottom",
+    [(1e-10, 0, 0), (0, -1e-10, 0), (6e-11, 6e-11, 0)],
+)
+def test_that_nearly_coincident_pillars_define_vertical_cells(unit_cell_grid, bottom):
+    unit_cell_grid.coord[0, 0, 1] = bottom
+    unit_cell_grid.zcorn += 1
+
+    assert unit_cell_grid.cell_corners(0, 0, 0)[[0, 4]].tolist() == [
+        [0, 0, 1],
+        [0, 0, 2],
+    ]
+    points = [(0.5, 0.5, 1.5), (0.5, 0.5, 2.5)]
+    assert unit_cell_grid.point_in_cell(points, 0, 0, 0).tolist() == [True, False]
+    assert unit_cell_grid.find_cell_containing_point(points) == [(0, 0, 0), None]
+
+
+@pytest.mark.parametrize(
+    "bottom",
+    [
+        (1, 0, 0),
+        (0, 1, 0),
+        (1.1e-10, 0, 0),
+        (0, -1.1e-10, 0),
+        (8e-11, 8e-11, 0),
+    ],
+)
+def test_that_zero_height_pillars_with_different_xy_are_invalid(unit_cell_grid, bottom):
+    unit_cell_grid.coord[0, 0, 1] = bottom
+
+    with pytest.raises(InvalidGridError, match="different x/y"):
+        unit_cell_grid.cell_corners(0, 0, 0)
+
+
+def test_that_short_nonzero_height_pillars_are_interpolated(unit_cell_grid):
+    unit_cell_grid.coord[0, 0, 1] = (5e-11, 0, 5e-11)
+
+    assert unit_cell_grid.cell_corners(0, 0, 0)[[0, 4]].tolist() == [
+        [0, 0, 0],
+        [1, 0, 1],
+    ]
+    points = [(0.75, 0.25, 0.5), (0.25, 0.25, 0.5)]
+    assert unit_cell_grid.point_in_cell(points, 0, 0, 0).tolist() == [True, False]
+    assert unit_cell_grid.find_cell_containing_point(points) == [(0, 0, 0), None]
 
 
 def test_that_cells_with_infinite_pillars_are_invalid():
