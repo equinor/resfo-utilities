@@ -120,14 +120,16 @@ std::vector<double> cell_corners(int i, int j, int k, const float* coord, const 
     // where SW = (i,j), SE = (i+1,j), NW = (i,j+1), NE = (i+1,j+1)
     // Map zcorn index to pillar index
     std::array<int, NUM_CORNERS> pillar_order = {0, 2, 1, 3, 0, 2, 1, 3};
-
+    constexpr float epsilon = 1e-10f;
     for (int v = 0; v < NUM_CORNERS; ++v) {
         int p_idx = pillar_order[v];
         const auto& p_top = top[p_idx];
         const auto& p_bot = bot[p_idx];
 
         float height_diff = p_bot[2] - p_top[2];
-        float t = p_top == p_bot
+        bool coincident = height_diff == 0.0f &&
+            std::hypot(p_bot[0] - p_top[0], p_bot[1] - p_top[1]) <= epsilon;
+        float t = coincident
             ? 0.0f
             : (z_values[v] - p_top[2]) / height_diff;
 
