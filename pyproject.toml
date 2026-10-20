@@ -10,11 +10,10 @@ build-backend = "scikit_build_core.build"
 name = "resfo-utilities"
 description="A utility library for working with the output of reservoir simulators."
 readme = "README.md"
-requires-python = ">=3.11, <=3.15"
+requires-python = ">=3.12, <=3.15"
 classifiers=[
     "Development Status :: 1 - Planning",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",

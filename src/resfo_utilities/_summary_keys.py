@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import re
 from enum import Enum, auto
-from typing import TypeVar, assert_never
+from typing import assert_never
 
 SPECIAL_KEYWORDS = [
     "NAIMFRAC",
@@ -274,8 +274,6 @@ def make_summary_key(
             assert_never(default)
 
 
-T = TypeVar("T")
-
 __all__ = [
     "InvalidSummaryKeyError",
     "SummaryKeyType",
@@ -285,7 +283,7 @@ __all__ = [
 ]
 
 
-def _check_if_missing(
+def _check_if_missing[T](
     keyword_name: str,
     missing_key: str,
     *test_vars: T | None,
