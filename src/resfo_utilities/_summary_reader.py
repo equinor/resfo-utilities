@@ -46,7 +46,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 from itertools import tee
-from typing import IO, Any, TypeAlias, overload
+from typing import IO, Any, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -104,7 +104,7 @@ class SummaryKeyword:
     unit: str | None = None
 
 
-FileOpener: TypeAlias = Callable[[], IO[Any]]
+type FileOpener = Callable[[], IO[Any]]
 
 
 class SummaryReader:

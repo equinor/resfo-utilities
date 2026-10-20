@@ -29,6 +29,7 @@ nitpick_ignore = [
     ("py:class", "numpy.int32"),
     ("py:class", "numpy.ndarray"),
     ("py:class", "resfo.format.Format"),
+    ("py:class", "resfo_utilities._summary_reader.FileOpener"),
 ]
 language = "python"
 html_theme = "sphinx_rtd_theme"
