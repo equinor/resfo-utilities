@@ -24,7 +24,7 @@ Typical usage example::
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import os
 from collections.abc import Container, Iterable, Iterator, Mapping
 from enum import StrEnum
@@ -83,8 +83,8 @@ class RFTEntry(Mapping[str, npt.NDArray[Any]]):
 
     def __init__(
         self,
-        time_since_start: datetime.timedelta,
-        date: datetime.date,
+        time_since_start: dt.timedelta,
+        date: dt.date,
         connections: np.ndarray[tuple[int, int], np.dtype[np.int32]],
         well: str,
         lgr_name: str | None = None,
@@ -125,12 +125,12 @@ class RFTEntry(Mapping[str, npt.NDArray[Any]]):
         self._data: dict[str, npt.NDArray[Any]] = {}
 
     @property
-    def time_since_start(self) -> datetime.timedelta:
+    def time_since_start(self) -> dt.timedelta:
         """Time elapsed since simulation start."""
         return self._time_since_start
 
     @property
-    def date(self) -> datetime.date:
+    def date(self) -> dt.date:
         """Calendar date of the measurement."""
         return self._date
 
@@ -304,7 +304,7 @@ class RFTReader(Iterable[RFTEntry]):
                             _validate_array(kw, self._name, elem.read_array()),
                         )
                     date_array = values[0]
-                    date = datetime.date(
+                    date = dt.date(
                         day=date_array[0],
                         month=date_array[1],
                         year=date_array[2],
@@ -369,11 +369,11 @@ class _TimeUnit(StrEnum):
     HOURS = "HOURS"
     DAYS = "DAYS"
 
-    def make_delta(self, val: float) -> datetime.timedelta:
+    def make_delta(self, val: float) -> dt.timedelta:
         match self:
             case _TimeUnit.HOURS:
-                return datetime.timedelta(hours=val)
+                return dt.timedelta(hours=val)
             case _TimeUnit.DAYS:
-                return datetime.timedelta(days=val)
+                return dt.timedelta(days=val)
             case default:
                 assert_never(default)

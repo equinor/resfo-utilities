@@ -31,8 +31,7 @@ We prefer a behavioral naming style for tests where each test function starts
 with test_that_... instead of just test_....
 
 ```python
-def test_that_user_cannot_login_with_invalid_password():
-    ...
+def test_that_user_cannot_login_with_invalid_password(): ...
 ```
 
 This convention comes from the idea of writing tests like executable

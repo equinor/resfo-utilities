@@ -118,6 +118,10 @@ select = [
     "YTT",
 ]
 
+ignore = [
+    "CPY001",  # Missing copyright notice at top of file
+]
+
 [tool.pytest.ini_options]
 addopts = "-ra --strict-markers"
 
