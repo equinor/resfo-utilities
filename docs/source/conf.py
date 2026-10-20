@@ -24,6 +24,7 @@ nitpick_ignore = [
     ("py:class", "np.float32"),
     ("py:class", "npt.ArrayLike"),
     ("py:class", "npt.NDArray"),
+    ("py:class", "numpy._typing._array_like.NDArray"),
     ("py:class", "numpy.dtype"),
     ("py:class", "numpy.float32"),
     ("py:class", "numpy.int32"),
