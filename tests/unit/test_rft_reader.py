@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 from io import BytesIO
 
 import numpy as np
@@ -139,8 +139,8 @@ def test_that_reader_can_read_minimal_valid_rft_entry():
     entry = entries[0]
     assert entry.well == "WELL1"
     assert entry.lgr_name is None
-    assert entry.date == datetime.date(2000, 1, 1)
-    assert entry.time_since_start == datetime.timedelta(hours=24)
+    assert entry.date == dt.date(2000, 1, 1)
+    assert entry.time_since_start == dt.timedelta(hours=24)
     assert entry.connections.tolist() == [[1, 1, 1], [2, 1, 2]]
     assert_array_equal(entry["PRESSURE"], np.array([100.0, 200.0]))
 
@@ -269,8 +269,8 @@ def test_that_reader_can_read_multiple_rft_entries():
     entries = list(reader)
 
     assert len(entries) == 2
-    assert entries[0].date == datetime.date(2000, 1, 1)
-    assert entries[1].date == datetime.date(2000, 1, 2)
+    assert entries[0].date == dt.date(2000, 1, 1)
+    assert entries[1].date == dt.date(2000, 1, 2)
     assert_array_equal(entries[0]["PRESSURE"], np.array([100.0]))
     assert_array_equal(entries[1]["PRESSURE"], np.array([150.0]))
 
