@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-14]
+        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-14]
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -27,7 +27,7 @@ jobs:
           CIBW_BUILD: cp312-* cp313-* cp314-* cp315-*
           CIBW_SKIP: "*-musllinux_*"
           CIBW_ARCHS_MACOS: "arm64"
-          CIBW_ARCHS_LINUX: "x86_64"
+          CIBW_ARCHS_LINUX: "native"
           CIBW_ARCHS_WINDOWS: "AMD64"
           CIBW_TEST_COMMAND: python -c "import resfo_utilities; from resfo_utilities._grid_cpp import find_cells_containing_points"
           CIBW_BUILD_VERBOSITY: 1
