@@ -20,6 +20,12 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# ubuntu-latest on GitHub uses GCC 15 which defaults to C23. This breaks the
+# zig-generated C in CodSpeed's instrument-hooks (zig_noreturn); pin the C
+# standard for fetched dependencies.
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
 include(FetchContent)
 
 # Eigen
