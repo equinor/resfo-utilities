@@ -13,6 +13,9 @@ API Reference
 .. autoclass:: resfo_utilities.SummaryReader
    :members:
 
+.. autoclass:: resfo_utilities.EsmryReader
+   :members:
+
 .. autoexception:: resfo_utilities.InvalidSummaryError
 
 .. autoclass:: resfo_utilities.SummaryKeyword
