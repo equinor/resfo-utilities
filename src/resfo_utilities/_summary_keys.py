@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import re
 from enum import Enum, auto
+from functools import lru_cache
 from typing import assert_never
 
 SPECIAL_KEYWORDS = [
@@ -77,6 +78,7 @@ class SummaryKeyType(Enum):
     OTHER = auto()
 
     @classmethod
+    @lru_cache(maxsize=1024)
     def from_variable(cls, summary_variable: str) -> SummaryKeyType:
         """Returns the type corresponding to the given summary variable
 
