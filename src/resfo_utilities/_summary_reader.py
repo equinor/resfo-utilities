@@ -45,7 +45,7 @@ from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
-from itertools import tee
+from itertools import chain, islice, repeat, tee
 from typing import IO, Any, overload
 
 import numpy as np
@@ -53,7 +53,7 @@ import numpy.typing as npt
 import resfo
 from natsort import natsorted
 
-from ._reading import decode_if_byte, key_to_str, stream_name, validate_array
+from ._reading import decode_if_byte, keys_to_str, stream_name, validate_array
 
 
 class InvalidSummaryError(ValueError):
@@ -66,8 +66,12 @@ class InvalidSummaryError(ValueError):
 
 _validate_array = partial(validate_array, error_class=InvalidSummaryError)
 
+# The arrays in summary files are typically larger than the default io buffer,
+# a larger buffer avoids a system call for each array and each seek past it.
+_BUFFER_SIZE = 1024 * 1024
 
-@dataclass
+
+@dataclass(slots=True)
 class SummaryKeyword:
     """One member of the KEYWORDS array.
 
@@ -278,28 +282,26 @@ class SummaryReader:
                 with smry_opener() as smry:
                     summary_name = stream_name(smry)
 
-                    def read_params(
-                        summary_name: str,
-                    ) -> Iterator[npt.NDArray[np.float32]]:
-                        nonlocal last_params
-                        if last_params is not None:
-                            vals = _validate_array(
+                    for entry in resfo.lazy_read(smry):
+                        kw = entry.read_keyword()
+                        if last_params is not None and (
+                            not report_step_only or kw == "SEQHDR  "
+                        ):
+                            yield _validate_array(
                                 "PARAMS",
                                 summary_name,
                                 last_params.read_array(),
                             )
                             last_params = None
-                            yield vals
-
-                    for entry in resfo.lazy_read(smry):
-                        kw = entry.read_keyword()
-                        if last_params and not report_step_only:
-                            yield from read_params(summary_name)
                         if kw == "PARAMS  ":
                             last_params = entry
-                        if report_step_only and kw == "SEQHDR  ":
-                            yield from read_params(summary_name)
-                    yield from read_params(summary_name)
+                    if last_params is not None:
+                        yield _validate_array(
+                            "PARAMS",
+                            summary_name,
+                            last_params.read_array(),
+                        )
+                        last_params = None
         except OSError as err:
             raise InvalidSummaryError(
                 f"Could not read from summary file {err.filename}: {err.strerror}",
@@ -319,7 +321,7 @@ class SummaryReader:
 
         def opener(s: str | os.PathLike[str]) -> FileOpener:
             def inner() -> IO[Any]:
-                return open(os.path.abspath(s), mode)
+                return open(os.path.abspath(s), mode, buffering=_BUFFER_SIZE)
 
             return inner
 
@@ -451,25 +453,34 @@ def _read_spec(
         )
         num_keywords = len(keywords)
 
-    def optional_get(arr: npt.NDArray[Any] | None, idx: int) -> Any:
+    def padded(arr: npt.NDArray[Any] | list[Any] | None) -> Iterator[Any]:
+        # Lazily pads with None when the array is missing or too short
+        return chain(() if arr is None else arr, repeat(None))
+
+    def to_str(kw: str, arr: npt.NDArray[Any] | None) -> list[str] | None:
         if arr is None:
             return None
-        if len(arr) <= idx:
-            return None
-        return arr[idx]
+        return keys_to_str(arr, kw, spec_name, InvalidSummaryError)
 
+    keyword_strs = to_str("KEYWORDS", keywords)
+    assert keyword_strs is not None
+    # Positional construction is considerably faster than keyword arguments
     summary_keywords = [
-        SummaryKeyword(
-            summary_variable=key_to_str(keywords[i]),
-            number=optional_get(nums, i),
-            name=key_to_str(optional_get(wgnames, i)),
-            lgr_name=key_to_str(optional_get(lgr_names, i)),
-            li=optional_get(numlx, i),
-            lj=optional_get(numly, i),
-            lk=optional_get(numlz, i),
-            unit=key_to_str(optional_get(units, i)),
+        SummaryKeyword(*fields)
+        for fields in islice(
+            zip(
+                keyword_strs,
+                padded(nums),
+                padded(to_str("WGNAMES", wgnames)),
+                padded(to_str("LGRS", lgr_names)),
+                padded(numlx),
+                padded(numly),
+                padded(numlz),
+                padded(to_str("UNITS", units)),
+                strict=False,
+            ),
+            num_keywords,
         )
-        for i in range(num_keywords)
     ]
 
     restart_arr = arrays["RESTART "]

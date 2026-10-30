@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import re
 from enum import Enum, auto
+from functools import lru_cache
 from typing import assert_never
 
 SPECIAL_KEYWORDS = [
@@ -54,6 +55,9 @@ SPECIAL_KEYWORDS = [
     "WNEWTON",
 ]
 
+_SPECIAL_KEYWORDS_PATTERN = re.compile("|".join(map(re.escape, SPECIAL_KEYWORDS)))
+_INTER_REGION_PATTERN = re.compile(r"R.FT.*|R..FT.*|R.FR.*|R..FR.*|R.F")
+
 
 class SummaryKeyType(Enum):
     """Summary keys are divided into types based on summary variable name."""
@@ -74,6 +78,7 @@ class SummaryKeyType(Enum):
     OTHER = auto()
 
     @classmethod
+    @lru_cache(maxsize=1024)
     def from_variable(cls, summary_variable: str) -> SummaryKeyType:
         """Returns the type corresponding to the given summary variable
 
@@ -82,34 +87,18 @@ class SummaryKeyType(Enum):
         >>> SummaryKeyType.from_variable("LWWIT").name
         'LOCAL_WELL'
         """
-        KEYWORD_TYPE_MAPPING = {
-            "A": cls.AQUIFER,
-            "B": cls.BLOCK,
-            "C": cls.COMPLETION,
-            "F": cls.FIELD,
-            "G": cls.GROUP,
-            "LB": cls.LOCAL_BLOCK,
-            "LC": cls.LOCAL_COMPLETION,
-            "LW": cls.LOCAL_WELL,
-            "N": cls.NETWORK,
-            "S": cls.SEGMENT,
-            "W": cls.WELL,
-        }
         if not summary_variable:
             raise InvalidSummaryKeyError("Got empty summary keyword")
-        if any(special in summary_variable for special in SPECIAL_KEYWORDS):
+        if _SPECIAL_KEYWORDS_PATTERN.search(summary_variable):
             return cls.OTHER
-        if summary_variable[0] in KEYWORD_TYPE_MAPPING:
-            return KEYWORD_TYPE_MAPPING[summary_variable[0]]
-        if summary_variable[0:2] in KEYWORD_TYPE_MAPPING:
-            return KEYWORD_TYPE_MAPPING[summary_variable[0:2]]
+        if summary_variable[0] in _KEYWORD_TYPE_MAPPING:
+            return _KEYWORD_TYPE_MAPPING[summary_variable[0]]
+        if summary_variable[0:2] in _KEYWORD_TYPE_MAPPING:
+            return _KEYWORD_TYPE_MAPPING[summary_variable[0:2]]
         if summary_variable == "RORFR":
             return cls.REGION
 
-        if any(
-            re.fullmatch(pattern, summary_variable)
-            for pattern in [r"R.FT.*", r"R..FT.*", r"R.FR.*", r"R..FR.*", r"R.F"]
-        ):
+        if _INTER_REGION_PATTERN.fullmatch(summary_variable):
             return cls.INTER_REGION
         if summary_variable[0] == "R":
             return cls.REGION
@@ -117,6 +106,22 @@ class SummaryKeyType(Enum):
         return cls.OTHER
 
 
+_KEYWORD_TYPE_MAPPING = {
+    "A": SummaryKeyType.AQUIFER,
+    "B": SummaryKeyType.BLOCK,
+    "C": SummaryKeyType.COMPLETION,
+    "F": SummaryKeyType.FIELD,
+    "G": SummaryKeyType.GROUP,
+    "LB": SummaryKeyType.LOCAL_BLOCK,
+    "LC": SummaryKeyType.LOCAL_COMPLETION,
+    "LW": SummaryKeyType.LOCAL_WELL,
+    "N": SummaryKeyType.NETWORK,
+    "S": SummaryKeyType.SEGMENT,
+    "W": SummaryKeyType.WELL,
+}
+
+
+@lru_cache(maxsize=1024)
 def is_rate(summary_variable: str) -> bool:
     """Whether the given summary variable is a rate.
 
@@ -143,9 +148,9 @@ def is_rate(summary_variable: str) -> bool:
             return _match_rate_root(1, _segment_rate_roots, summary_variable)
         case SummaryKeyType.INTER_REGION:
             # Region to region rates are identified by R*FR or R**FR
-            return _match_rate_root(2, ["FR"], summary_variable) or _match_rate_root(
+            return _match_rate_root(2, ("FR",), summary_variable) or _match_rate_root(
                 3,
-                ["FR"],
+                ("FR",),
                 summary_variable,
             )
 
@@ -168,6 +173,10 @@ def history_key(key: str) -> str:
     # at opm-flow-manual 2023-04 table 11.8, 11.9, 11.14 11.9
     keyword, *rest = key.split(":")
     return ":".join([keyword + "H", *rest])
+
+
+_WELL = SummaryKeyType.WELL
+_GROUP = SummaryKeyType.GROUP
 
 
 class InvalidSummaryKeyError(ValueError):
@@ -207,7 +216,16 @@ def make_summary_key(
     Raises:
         InvalidSummaryKeyError: If the key is invalid
     """
-    match SummaryKeyType.from_variable(keyword):
+    key_type = SummaryKeyType.from_variable(keyword)
+    # Wells, groups and field keys make up most keys in a typical case
+    if key_type is _WELL or key_type is _GROUP:
+        if not name or name == _DUMMY_NAME:
+            kind = "well" if key_type is _WELL else "group"
+            if name is None:
+                raise InvalidSummaryKeyError(f"{kind} keyword without name")
+            _check_if_valid_name(kind, name)
+        return f"{keyword}:{name}"
+    match key_type:
         case SummaryKeyType.FIELD | SummaryKeyType.OTHER:
             return keyword
         case SummaryKeyType.REGION:
@@ -288,7 +306,7 @@ def _check_if_missing[T](
     missing_key: str,
     *test_vars: T | None,
 ) -> list[T]:
-    if any(v is None for v in test_vars):
+    if None in test_vars:
         raise InvalidSummaryKeyError(f"{keyword_name} keyword without {missing_key}")
     return test_vars  # type: ignore
 
@@ -329,7 +347,7 @@ def _cell_index(array_index: int, nx: int, ny: int) -> tuple[int, int, int]:
     return array_index + 1, j + 1, k + 1
 
 
-_rate_roots = [  # see opm-flow-manual 2023-04 table 11.8, 11.9 & 11.14
+_rate_roots = (  # see opm-flow-manual 2023-04 table 11.8, 11.9 & 11.14
     "OPR",
     "OIR",
     "OVPR",
@@ -383,9 +401,9 @@ _rate_roots = [  # see opm-flow-manual 2023-04 table 11.8, 11.9 & 11.14
     "OGR",  # dimensionless but considered a rate, as the ratio of two rates
     "WGR",  # dimensionless but considered a rate, as the ratio of two rates
     "GLR",  # dimensionless but considered a rate, as the ratio of two rates
-]
+)
 
-_segment_rate_roots = [  # see opm-flow-manual 2023-04 table 11.19
+_segment_rate_roots = (  # see opm-flow-manual 2023-04 table 11.19
     "OFR",
     "GFR",
     "WFR",
@@ -397,10 +415,10 @@ _segment_rate_roots = [  # see opm-flow-manual 2023-04 table 11.19
     "GOR",  # dimensionless but considered a rate, as the ratio of two rates
     "OGR",  # dimensionless but considered a rate, as the ratio of two rates
     "WGR",  # dimensionless but considered a rate, as the ratio of two rates
-]
+)
 
 
-def _match_rate_root(start: int, rate_roots: list[str], keyword: str) -> bool:
+def _match_rate_root(start: int, rate_roots: tuple[str, ...], keyword: str) -> bool:
     if len(keyword) < start:
         return False
-    return any(keyword[start:].startswith(key) for key in rate_roots)
+    return keyword.startswith(rate_roots, start)
