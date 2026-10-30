@@ -278,28 +278,26 @@ class SummaryReader:
                 with smry_opener() as smry:
                     summary_name = stream_name(smry)
 
-                    def read_params(
-                        summary_name: str,
-                    ) -> Iterator[npt.NDArray[np.float32]]:
-                        nonlocal last_params
-                        if last_params is not None:
-                            vals = _validate_array(
+                    for entry in resfo.lazy_read(smry):
+                        kw = entry.read_keyword()
+                        if last_params is not None and (
+                            not report_step_only or kw == "SEQHDR  "
+                        ):
+                            yield _validate_array(
                                 "PARAMS",
                                 summary_name,
                                 last_params.read_array(),
                             )
                             last_params = None
-                            yield vals
-
-                    for entry in resfo.lazy_read(smry):
-                        kw = entry.read_keyword()
-                        if last_params and not report_step_only:
-                            yield from read_params(summary_name)
                         if kw == "PARAMS  ":
                             last_params = entry
-                        if report_step_only and kw == "SEQHDR  ":
-                            yield from read_params(summary_name)
-                    yield from read_params(summary_name)
+                    if last_params is not None:
+                        yield _validate_array(
+                            "PARAMS",
+                            summary_name,
+                            last_params.read_array(),
+                        )
+                        last_params = None
         except OSError as err:
             raise InvalidSummaryError(
                 f"Could not read from summary file {err.filename}: {err.strerror}",
