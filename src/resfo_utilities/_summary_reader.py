@@ -45,7 +45,7 @@ from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
-from itertools import tee
+from itertools import chain, islice, repeat, tee
 from typing import IO, Any, cast, overload
 
 import numpy as np
@@ -67,7 +67,7 @@ class InvalidSummaryError(ValueError):
 _validate_array = partial(validate_array, error_class=InvalidSummaryError)
 
 
-@dataclass
+@dataclass(slots=True)
 class SummaryKeyword:
     """One member of the KEYWORDS array.
 
@@ -451,29 +451,36 @@ def _read_spec(
         )
         num_keywords = len(keywords)
 
-    def optional_get(arr: npt.NDArray[Any] | list[Any] | None, idx: int) -> Any:
-        if arr is None:
-            return None
-        if len(arr) <= idx:
-            return None
-        return arr[idx]
+    def padded(arr: npt.NDArray[Any] | list[Any] | None) -> Iterator[Any]:
+        # Lazily pads with None when the array is missing or too short
+        return chain(() if arr is None else arr, repeat(None))
 
     keyword_strs = keys_to_str(keywords)
-    name_strs = None if wgnames is None else keys_to_str(wgnames)
-    lgr_strs = None if lgr_names is None else keys_to_str(lgr_names)
-    unit_strs = None if units is None else keys_to_str(units)
     summary_keywords = [
         SummaryKeyword(
-            summary_variable=cast(str, keyword_strs[i]),
-            number=optional_get(nums, i),
-            name=optional_get(name_strs, i),
-            lgr_name=optional_get(lgr_strs, i),
-            li=optional_get(numlx, i),
-            lj=optional_get(numly, i),
-            lk=optional_get(numlz, i),
-            unit=optional_get(unit_strs, i),
+            summary_variable=cast(str, summary_variable),
+            number=number,
+            name=name,
+            lgr_name=lgr_name,
+            li=li,
+            lj=lj,
+            lk=lk,
+            unit=unit,
         )
-        for i in range(num_keywords)
+        for summary_variable, number, name, lgr_name, li, lj, lk, unit in islice(
+            zip(
+                keyword_strs,
+                padded(nums),
+                padded(None if wgnames is None else keys_to_str(wgnames)),
+                padded(None if lgr_names is None else keys_to_str(lgr_names)),
+                padded(numlx),
+                padded(numly),
+                padded(numlz),
+                padded(None if units is None else keys_to_str(units)),
+                strict=False,
+            ),
+            num_keywords,
+        )
     ]
 
     restart_arr = arrays["RESTART "]
