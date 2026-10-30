@@ -121,6 +121,7 @@ _KEYWORD_TYPE_MAPPING = {
 }
 
 
+@lru_cache(maxsize=1024)
 def is_rate(summary_variable: str) -> bool:
     """Whether the given summary variable is a rate.
 

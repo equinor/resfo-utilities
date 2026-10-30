@@ -46,7 +46,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 from itertools import chain, islice, repeat, tee
-from typing import IO, Any, cast, overload
+from typing import IO, Any, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -65,6 +65,10 @@ class InvalidSummaryError(ValueError):
 
 
 _validate_array = partial(validate_array, error_class=InvalidSummaryError)
+
+# The arrays in summary files are typically larger than the default io buffer,
+# a larger buffer avoids a system call for each array and each seek past it.
+_BUFFER_SIZE = 1024 * 1024
 
 
 @dataclass(slots=True)
@@ -317,7 +321,7 @@ class SummaryReader:
 
         def opener(s: str | os.PathLike[str]) -> FileOpener:
             def inner() -> IO[Any]:
-                return open(os.path.abspath(s), mode)
+                return open(os.path.abspath(s), mode, buffering=_BUFFER_SIZE)
 
             return inner
 
@@ -460,18 +464,10 @@ def _read_spec(
 
     keyword_strs = to_str("KEYWORDS", keywords)
     assert keyword_strs is not None
+    # Positional construction is considerably faster than keyword arguments
     summary_keywords = [
-        SummaryKeyword(
-            summary_variable=cast(str, summary_variable),
-            number=number,
-            name=name,
-            lgr_name=lgr_name,
-            li=li,
-            lj=lj,
-            lk=lk,
-            unit=unit,
-        )
-        for summary_variable, number, name, lgr_name, li, lj, lk, unit in islice(
+        SummaryKeyword(*fields)
+        for fields in islice(
             zip(
                 keyword_strs,
                 padded(nums),
