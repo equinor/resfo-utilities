@@ -174,6 +174,10 @@ def history_key(key: str) -> str:
     return ":".join([keyword + "H", *rest])
 
 
+_WELL = SummaryKeyType.WELL
+_GROUP = SummaryKeyType.GROUP
+
+
 class InvalidSummaryKeyError(ValueError):
     pass
 
@@ -211,7 +215,16 @@ def make_summary_key(
     Raises:
         InvalidSummaryKeyError: If the key is invalid
     """
-    match SummaryKeyType.from_variable(keyword):
+    key_type = SummaryKeyType.from_variable(keyword)
+    # Wells, groups and field keys make up most keys in a typical case
+    if key_type is _WELL or key_type is _GROUP:
+        if not name or name == _DUMMY_NAME:
+            kind = "well" if key_type is _WELL else "group"
+            if name is None:
+                raise InvalidSummaryKeyError(f"{kind} keyword without name")
+            _check_if_valid_name(kind, name)
+        return f"{keyword}:{name}"
+    match key_type:
         case SummaryKeyType.FIELD | SummaryKeyType.OTHER:
             return keyword
         case SummaryKeyType.REGION:
