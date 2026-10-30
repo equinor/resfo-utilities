@@ -4,6 +4,7 @@ from ._cornerpoint_grid import (
     InvalidGridError,
     MapAxes,
 )
+from ._esmry_reader import EsmryReader
 from ._rft_reader import (
     InvalidRFTError,
     RFTDataCategory,
@@ -22,6 +23,7 @@ from ._summary_reader import InvalidSummaryError, SummaryKeyword, SummaryReader
 
 __all__ = [
     "CornerpointGrid",
+    "EsmryReader",
     "InvalidEgridFileError",
     "InvalidGridError",
     "InvalidRFTError",
