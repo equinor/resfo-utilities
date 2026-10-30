@@ -46,14 +46,14 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 from itertools import tee
-from typing import IO, Any, overload
+from typing import IO, Any, cast, overload
 
 import numpy as np
 import numpy.typing as npt
 import resfo
 from natsort import natsorted
 
-from ._reading import decode_if_byte, key_to_str, stream_name, validate_array
+from ._reading import decode_if_byte, keys_to_str, stream_name, validate_array
 
 
 class InvalidSummaryError(ValueError):
@@ -451,23 +451,27 @@ def _read_spec(
         )
         num_keywords = len(keywords)
 
-    def optional_get(arr: npt.NDArray[Any] | None, idx: int) -> Any:
+    def optional_get(arr: npt.NDArray[Any] | list[Any] | None, idx: int) -> Any:
         if arr is None:
             return None
         if len(arr) <= idx:
             return None
         return arr[idx]
 
+    keyword_strs = keys_to_str(keywords)
+    name_strs = None if wgnames is None else keys_to_str(wgnames)
+    lgr_strs = None if lgr_names is None else keys_to_str(lgr_names)
+    unit_strs = None if units is None else keys_to_str(units)
     summary_keywords = [
         SummaryKeyword(
-            summary_variable=key_to_str(keywords[i]),
+            summary_variable=cast(str, keyword_strs[i]),
             number=optional_get(nums, i),
-            name=key_to_str(optional_get(wgnames, i)),
-            lgr_name=key_to_str(optional_get(lgr_names, i)),
+            name=optional_get(name_strs, i),
+            lgr_name=optional_get(lgr_strs, i),
             li=optional_get(numlx, i),
             lj=optional_get(numly, i),
             lk=optional_get(numlz, i),
-            unit=key_to_str(optional_get(units, i)),
+            unit=optional_get(unit_strs, i),
         )
         for i in range(num_keywords)
     ]

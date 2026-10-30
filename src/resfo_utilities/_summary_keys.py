@@ -54,6 +54,9 @@ SPECIAL_KEYWORDS = [
     "WNEWTON",
 ]
 
+_SPECIAL_KEYWORDS_PATTERN = re.compile("|".join(map(re.escape, SPECIAL_KEYWORDS)))
+_INTER_REGION_PATTERN = re.compile(r"R.FT.*|R..FT.*|R.FR.*|R..FR.*|R.F")
+
 
 class SummaryKeyType(Enum):
     """Summary keys are divided into types based on summary variable name."""
@@ -82,39 +85,38 @@ class SummaryKeyType(Enum):
         >>> SummaryKeyType.from_variable("LWWIT").name
         'LOCAL_WELL'
         """
-        KEYWORD_TYPE_MAPPING = {
-            "A": cls.AQUIFER,
-            "B": cls.BLOCK,
-            "C": cls.COMPLETION,
-            "F": cls.FIELD,
-            "G": cls.GROUP,
-            "LB": cls.LOCAL_BLOCK,
-            "LC": cls.LOCAL_COMPLETION,
-            "LW": cls.LOCAL_WELL,
-            "N": cls.NETWORK,
-            "S": cls.SEGMENT,
-            "W": cls.WELL,
-        }
         if not summary_variable:
             raise InvalidSummaryKeyError("Got empty summary keyword")
-        if any(special in summary_variable for special in SPECIAL_KEYWORDS):
+        if _SPECIAL_KEYWORDS_PATTERN.search(summary_variable):
             return cls.OTHER
-        if summary_variable[0] in KEYWORD_TYPE_MAPPING:
-            return KEYWORD_TYPE_MAPPING[summary_variable[0]]
-        if summary_variable[0:2] in KEYWORD_TYPE_MAPPING:
-            return KEYWORD_TYPE_MAPPING[summary_variable[0:2]]
+        if summary_variable[0] in _KEYWORD_TYPE_MAPPING:
+            return _KEYWORD_TYPE_MAPPING[summary_variable[0]]
+        if summary_variable[0:2] in _KEYWORD_TYPE_MAPPING:
+            return _KEYWORD_TYPE_MAPPING[summary_variable[0:2]]
         if summary_variable == "RORFR":
             return cls.REGION
 
-        if any(
-            re.fullmatch(pattern, summary_variable)
-            for pattern in [r"R.FT.*", r"R..FT.*", r"R.FR.*", r"R..FR.*", r"R.F"]
-        ):
+        if _INTER_REGION_PATTERN.fullmatch(summary_variable):
             return cls.INTER_REGION
         if summary_variable[0] == "R":
             return cls.REGION
 
         return cls.OTHER
+
+
+_KEYWORD_TYPE_MAPPING = {
+    "A": SummaryKeyType.AQUIFER,
+    "B": SummaryKeyType.BLOCK,
+    "C": SummaryKeyType.COMPLETION,
+    "F": SummaryKeyType.FIELD,
+    "G": SummaryKeyType.GROUP,
+    "LB": SummaryKeyType.LOCAL_BLOCK,
+    "LC": SummaryKeyType.LOCAL_COMPLETION,
+    "LW": SummaryKeyType.LOCAL_WELL,
+    "N": SummaryKeyType.NETWORK,
+    "S": SummaryKeyType.SEGMENT,
+    "W": SummaryKeyType.WELL,
+}
 
 
 def is_rate(summary_variable: str) -> bool:

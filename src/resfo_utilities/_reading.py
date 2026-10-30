@@ -1,5 +1,6 @@
 from typing import IO, Any, overload
 
+import numpy as np
 import numpy.typing as npt
 import resfo
 
@@ -40,3 +41,12 @@ def key_to_str(key: bytes | str | None) -> str | None:
     if key is None:
         return None
     return decode_if_byte(key).strip()
+
+
+def keys_to_str(keys: npt.NDArray[Any]) -> list[str | None]:
+    """Same as ``key_to_str`` for each element, but decoding the array in one go."""
+    if keys.dtype.kind == "S":
+        keys = np.char.decode(keys, "utf-8")
+    if keys.dtype.kind == "U":
+        return [key.strip() for key in keys.tolist()]
+    return [key_to_str(key) for key in keys]
