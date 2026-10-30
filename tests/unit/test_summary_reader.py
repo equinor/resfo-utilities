@@ -247,6 +247,30 @@ def test_that_case_path_without_extension_warns_on_multiple_summary_types_and_pi
     assert chosen[0].endswith("CASE.UNSMRY")
 
 
+@pytest.mark.parametrize(
+    "formatted, extension",
+    [
+        (False, "S0001"),
+        (False, "SMSPEC"),
+        (True, "A0001"),
+        (True, "FSMSPEC"),
+    ],
+)
+def test_that_case_path_with_split_or_spec_extension_finds_split_files(
+    tmp_path: Path, formatted: bool, extension: str
+):
+    fmt = resfo.Format.FORMATTED if formatted else resfo.Format.UNFORMATTED
+    resfo.write(
+        tmp_path / f"CASE.{'F' if formatted else ''}SMSPEC", minimal_smspec(), fmt
+    )
+    split = [f"CASE.{'A' if formatted else 'S'}000{i}" for i in (1, 2)]
+    for name in split:
+        resfo.write(tmp_path / name, minimal_summary([(True, [1.0, 2.0])]), fmt)
+
+    reader = SummaryReader(case_path=tmp_path / f"CASE.{extension}")
+    assert list(reader.summary_filenames) == [str(tmp_path / n) for n in split]
+
+
 def test_that_restart_relative_path_is_made_absolute(tmp_path: Path):
     resfo.write(
         tmp_path / "CASE.SMSPEC",
