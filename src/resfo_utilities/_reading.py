@@ -1,4 +1,4 @@
-from typing import IO, Any, overload
+from typing import IO, Any
 
 import numpy.typing as npt
 import resfo
@@ -28,24 +28,16 @@ def decode_if_byte(key: bytes | str) -> str:
     return key.decode() if isinstance(key, bytes) else key
 
 
-@overload
-def key_to_str(key: bytes | str) -> str: ...
-
-
-@overload
-def key_to_str(key: None) -> None: ...
-
-
-def key_to_str(key: bytes | str | None) -> str | None:
-    if key is None:
-        return None
-    return decode_if_byte(key).strip()
-
-
-def keys_to_str(keys: npt.NDArray[Any]) -> list[str | None]:
-    """Same as ``key_to_str`` for each element, but converting the array in one go."""
-    if keys.dtype.kind == "S":
+def keys_to_str(
+    keys: npt.NDArray[Any],
+    kw: str,
+    filename: str,
+    error_class: type[Exception],
+) -> list[str]:
+    """Decode an array of strings and strip whitespace from each element."""
+    kind = keys.dtype.kind
+    if kind == "S":
         return [key.decode().strip() for key in keys.tolist()]
-    if keys.dtype.kind == "U":
+    if kind == "U":
         return [key.strip() for key in keys.tolist()]
-    return [key_to_str(key) for key in keys]
+    raise error_class(f"{kw.strip()} in {filename} is not a string array")

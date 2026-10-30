@@ -455,7 +455,13 @@ def _read_spec(
         # Lazily pads with None when the array is missing or too short
         return chain(() if arr is None else arr, repeat(None))
 
-    keyword_strs = keys_to_str(keywords)
+    def to_str(kw: str, arr: npt.NDArray[Any] | None) -> list[str] | None:
+        if arr is None:
+            return None
+        return keys_to_str(arr, kw, spec_name, InvalidSummaryError)
+
+    keyword_strs = to_str("KEYWORDS", keywords)
+    assert keyword_strs is not None
     summary_keywords = [
         SummaryKeyword(
             summary_variable=cast(str, summary_variable),
@@ -471,12 +477,12 @@ def _read_spec(
             zip(
                 keyword_strs,
                 padded(nums),
-                padded(None if wgnames is None else keys_to_str(wgnames)),
-                padded(None if lgr_names is None else keys_to_str(lgr_names)),
+                padded(to_str("WGNAMES", wgnames)),
+                padded(to_str("LGRS", lgr_names)),
                 padded(numlx),
                 padded(numly),
                 padded(numlz),
-                padded(None if units is None else keys_to_str(units)),
+                padded(to_str("UNITS", units)),
                 strict=False,
             ),
             num_keywords,
