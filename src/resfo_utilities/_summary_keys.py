@@ -145,9 +145,9 @@ def is_rate(summary_variable: str) -> bool:
             return _match_rate_root(1, _segment_rate_roots, summary_variable)
         case SummaryKeyType.INTER_REGION:
             # Region to region rates are identified by R*FR or R**FR
-            return _match_rate_root(2, ["FR"], summary_variable) or _match_rate_root(
+            return _match_rate_root(2, ("FR",), summary_variable) or _match_rate_root(
                 3,
-                ["FR"],
+                ("FR",),
                 summary_variable,
             )
 
@@ -290,7 +290,7 @@ def _check_if_missing[T](
     missing_key: str,
     *test_vars: T | None,
 ) -> list[T]:
-    if any(v is None for v in test_vars):
+    if None in test_vars:
         raise InvalidSummaryKeyError(f"{keyword_name} keyword without {missing_key}")
     return test_vars  # type: ignore
 
@@ -331,7 +331,7 @@ def _cell_index(array_index: int, nx: int, ny: int) -> tuple[int, int, int]:
     return array_index + 1, j + 1, k + 1
 
 
-_rate_roots = [  # see opm-flow-manual 2023-04 table 11.8, 11.9 & 11.14
+_rate_roots = (  # see opm-flow-manual 2023-04 table 11.8, 11.9 & 11.14
     "OPR",
     "OIR",
     "OVPR",
@@ -385,9 +385,9 @@ _rate_roots = [  # see opm-flow-manual 2023-04 table 11.8, 11.9 & 11.14
     "OGR",  # dimensionless but considered a rate, as the ratio of two rates
     "WGR",  # dimensionless but considered a rate, as the ratio of two rates
     "GLR",  # dimensionless but considered a rate, as the ratio of two rates
-]
+)
 
-_segment_rate_roots = [  # see opm-flow-manual 2023-04 table 11.19
+_segment_rate_roots = (  # see opm-flow-manual 2023-04 table 11.19
     "OFR",
     "GFR",
     "WFR",
@@ -399,10 +399,10 @@ _segment_rate_roots = [  # see opm-flow-manual 2023-04 table 11.19
     "GOR",  # dimensionless but considered a rate, as the ratio of two rates
     "OGR",  # dimensionless but considered a rate, as the ratio of two rates
     "WGR",  # dimensionless but considered a rate, as the ratio of two rates
-]
+)
 
 
-def _match_rate_root(start: int, rate_roots: list[str], keyword: str) -> bool:
+def _match_rate_root(start: int, rate_roots: tuple[str, ...], keyword: str) -> bool:
     if len(keyword) < start:
         return False
-    return any(keyword[start:].startswith(key) for key in rate_roots)
+    return keyword.startswith(rate_roots, start)
