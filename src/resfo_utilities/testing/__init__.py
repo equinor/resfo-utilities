@@ -49,6 +49,7 @@ from ._egrid_generator import (
     Units,
     egrids,
 )
+from ._esmry_generator import Esmry, esmrys
 from ._summary_generator import (
     Date,
     Simulator,
@@ -67,6 +68,7 @@ __all__ = [
     "CoordinateType",
     "Date",
     "EGrid",
+    "Esmry",
     "Filehead",
     "GlobalGrid",
     "GridFormat",
@@ -84,6 +86,7 @@ __all__ = [
     "Units",
     "Unsmry",
     "egrids",
+    "esmrys",
     "smspecs",
     "summaries",
     "summary_variables",
