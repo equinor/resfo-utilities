@@ -552,7 +552,7 @@ def _get_summary_filenames(filepath: str | os.PathLike[str]) -> tuple[list[str],
     specified_formatted = _has_extension(file_name, r"funsmry|fsmspec|a\d\d\d\d")
     specified_unformatted = _has_extension(file_name, r"unsmry|smspec|s\d\d\d\d")
     specified_unified = _has_extension(file_name, "funsmry")
-    specified_split = _has_extension(file_name, r"x\d\d\d\d|a\d\d\d\d")
+    specified_split = _has_extension(file_name, r"s\d\d\d\d|a\d\d\d\d")
     spec_candidates, smry_candidates = tee(
         map(
             lambda x: os.path.join(directory, x),
@@ -579,9 +579,9 @@ def _get_summary_filenames(filepath: str | os.PathLike[str]) -> tuple[list[str],
     if specified_unified:
         smry_candidates = filter_extension("unsmry|funsmry", smry_candidates)
     if specified_formatted:
-        smry_candidates = filter_extension("funsmry", smry_candidates)
+        smry_candidates = filter_extension(r"funsmry|a\d\d\d\d", smry_candidates)
     if specified_unformatted:
-        smry_candidates = filter_extension("unsmry", smry_candidates)
+        smry_candidates = filter_extension(r"unsmry|s\d\d\d\d", smry_candidates)
     all_summary = natsorted(list(smry_candidates))
     summary = []
     pat = None
