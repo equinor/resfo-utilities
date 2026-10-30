@@ -257,11 +257,15 @@ def test_that_case_path_without_extension_warns_on_multiple_summary_types_and_pi
     ],
 )
 def test_that_case_path_with_split_or_spec_extension_finds_split_files(
-    tmp_path: Path, formatted: bool, extension: str
+    tmp_path: Path,
+    formatted: bool,
+    extension: str,
 ):
     fmt = resfo.Format.FORMATTED if formatted else resfo.Format.UNFORMATTED
     resfo.write(
-        tmp_path / f"CASE.{'F' if formatted else ''}SMSPEC", minimal_smspec(), fmt
+        tmp_path / f"CASE.{'F' if formatted else ''}SMSPEC",
+        minimal_smspec(),
+        fmt,
     )
     split = [f"CASE.{'A' if formatted else 'S'}000{i}" for i in (1, 2)]
     for name in split:
