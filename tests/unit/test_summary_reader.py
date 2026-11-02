@@ -143,6 +143,21 @@ def test_mess_values_in_summary_files_raises_informative_errors():
         read_summary(smspec_buf, BytesIO())
 
 
+def test_non_string_keywords_in_smspec_raises_informative_error():
+    smspec_buf = BytesIO()
+    resfo.write(
+        smspec_buf,
+        [
+            ("STARTDAT", np.array([1, 1, 2000, 0, 0, 0], dtype=np.int32)),
+            ("KEYWORDS", np.array([1, 2], dtype=np.int32)),
+        ],
+    )
+    smspec_buf.seek(0)
+
+    with pytest.raises(InvalidSummaryError, match=r"KEYWORDS .* not a string array"):
+        read_summary(smspec_buf, BytesIO())
+
+
 def test_missing_keywords_in_smspec_raises_informative_error():
     smspec_buf = BytesIO()
     resfo.write(

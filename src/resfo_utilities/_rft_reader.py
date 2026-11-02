@@ -37,7 +37,7 @@ import numpy as np
 import numpy.typing as npt
 import resfo
 
-from ._reading import key_to_str, stream_name, validate_array
+from ._reading import keys_to_str, stream_name, validate_array
 
 
 class InvalidRFTError(ValueError):
@@ -309,7 +309,12 @@ class RFTReader(Iterable[RFTEntry]):
                         month=date_array[1],
                         year=date_array[2],
                     )
-                    well_etc = [key_to_str(v) for v in values[1]]
+                    well_etc: list[Any] = keys_to_str(
+                        values[1],
+                        "WELLETC",
+                        self._name,
+                        InvalidRFTError,
+                    )
                     if len(well_etc) > 11:
                         del well_etc[11]  # always blank
                     if len(well_etc) > 2:
