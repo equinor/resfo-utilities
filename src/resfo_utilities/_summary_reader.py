@@ -44,7 +44,7 @@ from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
-from itertools import chain, islice, repeat, tee
+from itertools import chain, islice, repeat
 from typing import IO, Any, overload
 
 import numpy as np

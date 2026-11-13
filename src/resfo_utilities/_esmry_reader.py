@@ -26,7 +26,6 @@ can skip reading the keywords that are not requested::
 """
 
 import os
-import re
 from collections.abc import Iterable, Iterator
 from datetime import datetime
 from typing import IO, Any
@@ -37,9 +36,19 @@ import resfo
 
 from ._guess_summary_filename import get_esmry_filename
 from ._reading import decode_if_byte, keys_to_str, stream_name, validate_array
-from ._summary_reader import FileOpener, InvalidSummaryError
+from ._summary_reader import _BUFFER_SIZE, FileOpener, InvalidSummaryError
 
-_VECTOR = re.compile(r"V(\d+)\s*")
+
+def _vector_number(kw: str) -> int | None:
+    """The number of a vector keyword (eg. 2 for ``"V2      "``), else None.
+
+    Equivalent to matching ``V(\\d+)\\s*`` but considerably cheaper, as it is
+    called once for each of the (possibly very many) vectors in the file.
+    """
+    if not kw.startswith("V"):
+        return None
+    digits = kw[1:].rstrip()
+    return int(digits) if digits.isdecimal() else None
 
 
 class _Header:
@@ -146,7 +155,7 @@ class EsmryReader:
             filename = self._esmry_filename
 
             def opener() -> IO[Any]:
-                return open(os.path.abspath(filename), "rb")
+                return open(os.path.abspath(filename), "rb", buffering=_BUFFER_SIZE)
 
             self._esmry: FileOpener = opener
         else:
@@ -227,19 +236,24 @@ class EsmryReader:
             wanted = {index[key] for key in keys}
 
         header = _Header(self._name())
+        num_keys = len(all_keys)
+        num_steps: int | None = None
         seen: set[int] = set()
         mask: npt.NDArray[np.bool_] | None = None
         try:
             with self._esmry() as stream:
                 header.name = stream_name(stream)
+                # There may be a very large number of vectors so the
+                # work done for each of them is kept to a minimum
                 for entry in resfo.lazy_read(stream):
                     kw = entry.read_keyword()
-                    vector = _VECTOR.fullmatch(kw)
-                    if vector is None:
+                    number = _vector_number(kw)
+                    if number is None:
                         header.read(kw, entry.read_array())
+                        if header.ministeps is not None:
+                            num_steps = len(header.ministeps)
                         continue
-                    number = int(vector[1])
-                    if number >= len(all_keys):
+                    if number >= num_keys:
                         raise InvalidSummaryError(
                             f"{kw.strip()} in {header.name} has no matching key",
                         )
@@ -251,20 +265,18 @@ class EsmryReader:
                                 f"RSTEP missing before {kw.strip()} in {header.name}",
                             )
                         mask = header.report_steps > 0
-                    vals = validate_array(
-                        kw,
-                        header.name,
-                        entry.read_array(),
-                        InvalidSummaryError,
-                    ).astype(np.float32, copy=False)
-                    if header.ministeps is not None and len(vals) != len(
-                        header.ministeps,
-                    ):
+                    vals = entry.read_array()
+                    if isinstance(vals, resfo.MessType):
+                        raise InvalidSummaryError(
+                            f"{kw.strip()} in {header.name} has incorrect type MESS",
+                        )
+                    if num_steps is not None and len(vals) != num_steps:
                         raise InvalidSummaryError(
                             f"{kw.strip()} in {header.name} has {len(vals)} values"
-                            f" but TSTEP has {len(header.ministeps)}",
+                            f" but TSTEP has {num_steps}",
                         )
                     seen.add(number)
+                    vals = vals.astype(np.float32, copy=False)
                     yield vals[mask] if mask is not None else vals
         except OSError as err:
             raise InvalidSummaryError(
@@ -294,7 +306,7 @@ class EsmryReader:
                 for entry in resfo.lazy_read(stream):
                     kw = entry.read_keyword()
                     # Vector data comes after the header
-                    if _VECTOR.fullmatch(kw):
+                    if _vector_number(kw) is not None:
                         break
                     header.read(kw, entry.read_array())
         except OSError as err:
