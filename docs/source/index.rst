@@ -26,7 +26,8 @@ By giving that input to a reservoir simulator (flow in this case):
 the simulator will output a number of files (depending on what options
 are set in the input file). resfo-utilities is used to read and analyze
 such output. The summary files (.SMSPEC, .UNSMRY, etc.) can be read using
-:class:`resfo_utilities.SummaryReader` while the egrid file (.EGRID and .FEGRID) can be
+:class:`resfo_utilities.SummaryReader` (or OPM flow's .ESMRY
+files with :class:`resfo_utilities.EsmryReader`) while the egrid file (.EGRID and .FEGRID) can be
 analyzed using the :class:`resfo_utilities.CornerpointGrid`.
 
 
