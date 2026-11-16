@@ -186,7 +186,7 @@ class SummaryReader:
             assert smspec is not None
             assert summaries is not None
             self._smspec = smspec
-            self._summaries = summaries
+            self._summaries = list(summaries)  # may be a one-shot iterator
 
         self._start_date: datetime | None = None
         self._summary_keywords: list[SummaryKeyword] | None = None
