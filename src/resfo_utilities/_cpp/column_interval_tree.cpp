@@ -73,7 +73,7 @@ std::vector<ColumnBoundingBox> create_column_bounding_boxes(const float* coord,
                 update_bounds(pillar_x_y_at(z_max));
             }
 
-            boxes.push_back(std::move(box));
+            boxes.push_back(box);
         }
     }
 
@@ -96,12 +96,13 @@ int ColumnIntervalTree::build(std::vector<ColumnBoundingBox> boxes) {
 
     std::vector<ColumnBoundingBox> left_boxes, right_boxes, spanning;
     for (auto& b : boxes) {
-        if (b.max_x < mid)      left_boxes.push_back(std::move(b));
-        else if (b.min_x > mid) right_boxes.push_back(std::move(b));
-        else                    spanning.push_back(std::move(b));
+        // ColumnBoundingBox is trivially copyable, so there is nothing to
+        // gain from moving. Moving makes push_back forward to emplace_back,
+        // which GCC may leave out of line, doubling the build time.
+        if (b.max_x < mid)      left_boxes.push_back(b);
+        else if (b.min_x > mid) right_boxes.push_back(b);
+        else                    spanning.push_back(b);
     }
-    // All content has been moved out of boxes by now, but clear to avoid
-    // accidental access to moved content.
     boxes.clear();
 
     int idx = static_cast<int>(nodes_.size());
