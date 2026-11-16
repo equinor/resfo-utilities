@@ -73,6 +73,26 @@ def test_that_the_read_values_matches_those_in_the_input(summary, report_step_on
             assert getter(unsmry, report_step, kw_index) == pytest.approx(val[kw_index])
 
 
+@given(summary=summaries())
+def test_that_summaries_can_be_a_one_shot_iterator(summary):
+    smspec, unsmry = summary
+    smspec_buf = BytesIO()
+    unsmry_buf = BytesIO()
+    smspec.to_file(smspec_buf)
+    unsmry.to_file(unsmry_buf)
+
+    reader = SummaryReader(
+        smspec=lambda: BytesIO(smspec_buf.getvalue()),
+        summaries=iter([lambda: BytesIO(unsmry_buf.getvalue())]),
+    )
+
+    first = list(reader.values())
+    second = list(reader.values())
+    assert len(second) == len(first)
+    for a, b in zip(first, second, strict=True):
+        np.testing.assert_array_equal(a, b)
+
+
 def read_summary(smspec, unsmry, report_step_only=True):
     summary = SummaryReader(smspec=lambda: smspec, summaries=[lambda: unsmry])
     _ = list(summary.values(report_step_only))
