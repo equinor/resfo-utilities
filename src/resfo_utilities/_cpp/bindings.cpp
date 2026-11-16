@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <limits>
 #include <optional>
 #include <stdexcept>
@@ -66,6 +67,43 @@ static CellResult to_result(const std::optional<resfo::CellIndex>& r) {
     return std::nullopt;
 }
 
+// The z-range the column bounding boxes must cover, or nullopt if no cell is
+// selected. With a cell mask, only the selected cells contribute, giving
+// tighter boxes.
+//
+// The minimum and maximum are tracked separately for each of the eight
+// corners so that the loop has no dependency between corners and can be
+// vectorised, which std::minmax_element cannot.
+static std::optional<std::pair<float, float>> selected_z_range(
+    const float* zcorn, size_t num_cells, const bool* cell_mask)
+{
+    std::array<float, resfo::NUM_CORNERS> lo, hi;
+    lo.fill(std::numeric_limits<float>::max());
+    hi.fill(std::numeric_limits<float>::lowest());
+    auto include = [&lo, &hi](const float* cell) {
+        for (int v = 0; v < resfo::NUM_CORNERS; ++v) {
+            lo[v] = cell[v] < lo[v] ? cell[v] : lo[v];
+            hi[v] = cell[v] > hi[v] ? cell[v] : hi[v];
+        }
+    };
+
+    bool any_selected = false;
+    if (cell_mask == nullptr) {
+        any_selected = num_cells > 0;
+        for (size_t c = 0; c < num_cells; ++c)
+            include(zcorn + c * resfo::NUM_CORNERS);
+    } else {
+        for (size_t c = 0; c < num_cells; ++c) {
+            if (!cell_mask[c]) continue;
+            any_selected = true;
+            include(zcorn + c * resfo::NUM_CORNERS);
+        }
+    }
+    if (!any_selected) return std::nullopt;
+    return std::make_pair(*std::min_element(lo.begin(), lo.end()),
+                          *std::max_element(hi.begin(), hi.end()));
+}
+
 std::vector<CellResult> find_cells_containing_points(
     FloatArray points_array, FloatArray coord_array, FloatArray zcorn_array,
     float tolerance, std::optional<BoolArray> cell_mask_array)
@@ -83,29 +121,8 @@ std::vector<CellResult> find_cells_containing_points(
 
     if (g.num_points == 0) return std::vector<CellResult>();
 
-    // The z-range the column bounding boxes must cover. With a cell mask,
-    // only the selected cells contribute, giving tighter boxes.
-    auto z_range = [&g, cell_mask]() -> std::optional<std::pair<float, float>> {
-        if (g.zcorn_size == 0) return std::nullopt;
-        if (cell_mask == nullptr) {
-            auto [z_min, z_max] = std::minmax_element(g.zcorn, g.zcorn + g.zcorn_size);
-            return std::make_pair(*z_min, *z_max);
-        }
-        float z_min = std::numeric_limits<float>::max();
-        float z_max = std::numeric_limits<float>::lowest();
-        bool any_selected = false;
-        const size_t num_cells = g.zcorn_size / resfo::NUM_CORNERS;
-        for (size_t c = 0; c < num_cells; ++c) {
-            if (!cell_mask[c]) continue;
-            any_selected = true;
-            const float* cell = g.zcorn + c * resfo::NUM_CORNERS;
-            auto [lo, hi] = std::minmax_element(cell, cell + resfo::NUM_CORNERS);
-            z_min = std::min(z_min, *lo);
-            z_max = std::max(z_max, *hi);
-        }
-        if (!any_selected) return std::nullopt;
-        return std::make_pair(z_min, z_max);
-    }();
+    auto z_range = selected_z_range(
+        g.zcorn, g.zcorn_size / resfo::NUM_CORNERS, cell_mask);
 
     if (!z_range.has_value()) return std::vector<CellResult>(g.num_points);
 
