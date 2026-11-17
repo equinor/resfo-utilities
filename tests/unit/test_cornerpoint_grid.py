@@ -7,7 +7,7 @@ import pytest
 import resfo
 from hypothesis import HealthCheck, assume, example, given, settings
 from hypothesis.extra.numpy import arrays, from_dtype
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_array_equal
 
 from resfo_utilities import (
     CornerpointGrid,
@@ -36,6 +36,14 @@ def test_that_cornerpoint_grid_reads_all_generated_grids(egrid):
     buf.seek(0)
     _ = CornerpointGrid.read_egrid(buf)
 
+    buf.seek(0)
+    grid = CornerpointGrid.read_egrid(buf, read_actnum=True)
+    expected = egrid.global_grid.actnum
+    if expected is None:
+        assert grid.actnum is None
+    else:
+        # i cycles fastest in the file
+        assert_array_equal(grid.actnum, expected.reshape(egrid.shape, order="F"))
 
 def test_that_read_egrid_raises_invalid_egrid_file_when_gridhead_is_mess():
     with pytest.raises(InvalidEgridFileError, match="MESS"):
@@ -1089,16 +1097,6 @@ def actnum_egrid(actnum, dims=(2, 3, 4)):
 
 def test_that_read_egrid_does_not_read_actnum_by_default():
     assert CornerpointGrid.read_egrid(actnum_egrid(np.zeros(24))).actnum is None
-
-
-def test_that_read_egrid_reads_actnum_with_i_cycling_fastest():
-    grid = CornerpointGrid.read_egrid(
-        actnum_egrid(np.arange(24)),
-        read_actnum=True,
-    )
-    assert grid.actnum.shape == (2, 3, 4)
-    for i, j, k in np.ndindex(2, 3, 4):
-        assert grid.actnum[i, j, k] == i + 2 * j + 6 * k
 
 
 def test_that_read_egrid_raises_invalid_egrid_file_when_actnum_has_wrong_size():
