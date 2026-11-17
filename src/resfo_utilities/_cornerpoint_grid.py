@@ -346,10 +346,9 @@ class CornerpointGrid:
     ) -> list[tuple[int, int, int] | None]:
         """Find a cell in the grid which contains the given point.
 
-        By default, only active cells are searched, so a point that is only
-        contained in inactive cells is not found. To search all cells
-        regardless of actnum, pass
-        ``cell_mask=np.ones(grid.zcorn.shape[:3], dtype=bool)``.
+        When ``cell_mask`` is not set, only active cells are searched, so a
+        point that is only contained in inactive cells is not found. To search
+        all cells regardless of actnum, pass ``cell_mask=None``.
 
         Args:
             points:
@@ -362,8 +361,9 @@ class CornerpointGrid:
                 be considered to be contained in the cell.
             cell_mask:
                 A (ni, nj, nk) boolean array selecting the cells to search;
-                cells where the mask is False are ignored. Defaults to
-                ``actnum != 0``, or all cells if the grid has no actnum.
+                cells where the mask is False are ignored. If None, all cells
+                are searched. If the parameter is not set, ``actnum != 0`` is
+                used, or all cells if the grid has no actnum.
 
         Returns:
             list of i,j,k indices for each point (or None if the
