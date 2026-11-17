@@ -45,6 +45,7 @@ def test_that_cornerpoint_grid_reads_all_generated_grids(egrid):
         # i cycles fastest in the file
         assert_array_equal(grid.actnum, expected.reshape(egrid.shape, order="F"))
 
+
 def test_that_read_egrid_raises_invalid_egrid_file_when_gridhead_is_mess():
     with pytest.raises(InvalidEgridFileError, match="MESS"):
         CornerpointGrid.read_egrid(write_to_buffer([("GRIDHEAD", resfo.MESS)]))
@@ -1083,13 +1084,16 @@ def cell_centers(grid):
 
 def actnum_egrid(actnum, dims=(2, 3, 4)):
     n = dims[0] * dims[1] * dims[2]
+    actnum_keyword = (
+        [] if actnum is None else [("ACTNUM  ", np.asarray(actnum, dtype=">i4"))]
+    )
     return write_to_buffer(
         [
             ("FILEHEAD", pad_to([3, 2007, 0, 0, 0, 0, 1], 100)),
             ("GRIDHEAD", pad_to([1, *dims], 100)),
             ("COORD   ", np.arange(0, 6 * (dims[0] + 1) * (dims[1] + 1), dtype=">f4")),
             ("ZCORN   ", np.arange(0, 8 * n, dtype=">f4")),
-            ("ACTNUM  ", np.asarray(actnum, dtype=">i4")),
+            *actnum_keyword,
             ("ENDGRID ", np.array([], dtype=">i4")),
         ],
     )
@@ -1097,6 +1101,12 @@ def actnum_egrid(actnum, dims=(2, 3, 4)):
 
 def test_that_read_egrid_does_not_read_actnum_by_default():
     assert CornerpointGrid.read_egrid(actnum_egrid(np.zeros(24))).actnum is None
+
+
+def test_that_read_egrid_gives_no_actnum_when_file_has_none_and_read_actnum_is_set():
+    grid = CornerpointGrid.read_egrid(actnum_egrid(None), read_actnum=True)
+
+    assert grid.actnum is None
 
 
 def test_that_read_egrid_raises_invalid_egrid_file_when_actnum_has_wrong_size():
@@ -1141,17 +1151,12 @@ def test_that_cell_mask_selects_the_cells_that_can_be_found(seed, has_actnum):
     ]
 
 
-def test_that_inactive_cells_are_found_when_cell_mask_selects_all_cells():
+@pytest.mark.parametrize("cell_mask", [np.ones((2, 3, 4), dtype=bool), None])
+def test_that_inactive_cells_are_found_when_cell_mask_selects_all_cells(cell_mask):
     grid = regular_grid(2, 3, 4, actnum=np.zeros((2, 3, 4), dtype=np.int32))
     cells, centers = cell_centers(grid)
 
-    assert (
-        grid.find_cell_containing_point(
-            centers,
-            cell_mask=np.ones((2, 3, 4), dtype=bool),
-        )
-        == cells
-    )
+    assert grid.find_cell_containing_point(centers, cell_mask=cell_mask) == cells
 
 
 def test_that_masked_cells_do_not_hide_overlapping_cells():
