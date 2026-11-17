@@ -28,6 +28,7 @@ from typing import IO, Any, Self, TypeVar
 import numpy as np
 import resfo
 from numpy import typing as npt
+from typing_extensions import sentinel
 
 from ._grid_cpp import find_cells_containing_points, point_in_cell
 
@@ -38,6 +39,9 @@ class InvalidEgridFileError(ValueError):
 
 class InvalidGridError(ValueError):
     pass
+
+
+MISSING = sentinel("MISSING")
 
 
 @dataclass
@@ -338,7 +342,7 @@ class CornerpointGrid:
         points: npt.ArrayLike,
         map_coordinates: bool = True,
         tolerance: float = 1.0e-6,
-        cell_mask: npt.ArrayLike | None = None,
+        cell_mask: npt.ArrayLike | None | MISSING = MISSING,
     ) -> list[tuple[int, int, int] | None]:
         """Find a cell in the grid which contains the given point.
 
@@ -374,14 +378,14 @@ class CornerpointGrid:
             points = points[np.newaxis, :]
 
         mask: npt.NDArray[np.bool_] | None = None
-        if cell_mask is not None:
+        if cell_mask is not None and cell_mask is not MISSING:
             mask = np.ascontiguousarray(cell_mask, dtype=np.bool_)
             if mask.shape != self.zcorn.shape[:3]:
                 raise ValueError(
                     f"cell_mask had shape {mask.shape},"
                     f" expected {self.zcorn.shape[:3]}",
                 )
-        elif self.actnum is not None:
+        elif cell_mask is MISSING and self.actnum is not None:
             mask = self.actnum != 0
         # Without a mask the search takes the unfiltered path
         if mask is not None and mask.all():

@@ -19,7 +19,7 @@ classifiers=[
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3.15",
 ]
-dependencies = ["numpy", "resfo>=5", "scipy", "natsort"]
+dependencies = ["numpy", "resfo>=5", "scipy", "natsort", "typing_extensions>=4.16.0"]
 dynamic=["version"]
 
 authors = [
@@ -50,7 +50,7 @@ doc = [
 dev = [
     "pytest",
     "pre-commit",
-    "mypy",
+    "mypy>=2.4",
     "pytest-benchmark",
     "pytest-codspeed",
     "scipy-stubs",

@@ -283,7 +283,7 @@ def test_that_case_path_without_extension_warns_on_multiple_summary_types_and_pi
 
 
 @pytest.mark.parametrize(
-    "formatted, extension",
+    ("formatted", "extension"),
     [
         (False, "S0001"),
         (False, "SMSPEC"),
