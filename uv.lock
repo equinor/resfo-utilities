@@ -1170,6 +1170,7 @@ dependencies = [
     { name = "numpy" },
     { name = "resfo" },
     { name = "scipy" },
+    { name = "typing-extensions" },
 ]
 
 [package.optional-dependencies]
@@ -1193,7 +1194,7 @@ testing = [
 [package.metadata]
 requires-dist = [
     { name = "hypothesis", marker = "extra == 'testing'" },
-    { name = "mypy", marker = "extra == 'dev'" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=2.4" },
     { name = "natsort" },
     { name = "numpy" },
     { name = "pre-commit", marker = "extra == 'dev'" },
@@ -1206,6 +1207,7 @@ requires-dist = [
     { name = "scipy-stubs", marker = "extra == 'dev'" },
     { name = "sphinx", marker = "extra == 'doc'" },
     { name = "sphinx-rtd-theme", marker = "extra == 'doc'" },
+    { name = "typing-extensions", specifier = ">=4.16.0" },
 ]
 provides-extras = ["testing", "doc", "dev"]
 

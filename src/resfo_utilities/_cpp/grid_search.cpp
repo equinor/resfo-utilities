@@ -17,14 +17,16 @@ struct Candidate {
 static std::vector<Candidate> gather_z_candidates(
     const std::vector<std::pair<int, int>>& columns,
     const float* zcorn, const GridDimensions& dims,
-    float pz, float bound_tol)
+    float pz, float bound_tol, const bool* cell_mask)
 {
     std::vector<Candidate> candidates;
     candidates.reserve(columns.size() * 2);
 
     for (const auto& [ci, cj] : columns) {
         for (int k = 0; k < dims.nk; ++k) {
-            int zcorn_idx = (ci * dims.nj * dims.nk + cj * dims.nk + k) * NUM_CORNERS;
+            int cell_idx = ci * dims.nj * dims.nk + cj * dims.nk + k;
+            if (cell_mask != nullptr && !cell_mask[cell_idx]) continue;
+            int zcorn_idx = cell_idx * NUM_CORNERS;
             auto [z_min_it, z_max_it] = std::minmax_element(
                 zcorn + zcorn_idx, zcorn + zcorn_idx + NUM_CORNERS);
             if (pz >= *z_min_it - 2 * bound_tol && pz <= *z_max_it + 2 * bound_tol) {
@@ -121,7 +123,7 @@ static void order_columns_by_depth_distance(
 
 std::optional<CellIndex> grid_search(
     const Eigen::Vector3d& p, const float* coord, const float* zcorn, const GridDimensions& dims,
-    const ColumnIntervalTree& tree, float tolerance) {
+    const ColumnIntervalTree& tree, float tolerance, const bool* cell_mask) {
 
     float bound_tol = 20.0f * tolerance;
 
@@ -136,7 +138,7 @@ std::optional<CellIndex> grid_search(
         bound_tol);
 
     const float pz = static_cast<float>(p[2]);
-    auto candidates = gather_z_candidates(columns, zcorn, dims, pz, bound_tol);
+    auto candidates = gather_z_candidates(columns, zcorn, dims, pz, bound_tol, cell_mask);
     return test_candidates(candidates, p, coord, zcorn, dims, tolerance);
 }
 

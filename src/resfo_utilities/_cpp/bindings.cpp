@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <limits>
 #include <optional>
 #include <stdexcept>
@@ -18,6 +19,7 @@
 namespace py = pybind11;
 
 using FloatArray = py::array_t<float, py::array::c_style | py::array::forcecast>;
+using BoolArray = py::array_t<bool, py::array::c_style | py::array::forcecast>;
 
 // Validated grid arrays extracted from numpy buffers.
 struct GridArrays {
@@ -65,28 +67,75 @@ static CellResult to_result(const std::optional<resfo::CellIndex>& r) {
     return std::nullopt;
 }
 
+// The z-range the column bounding boxes must cover, or nullopt if no cell is
+// selected. With a cell mask, only the selected cells contribute, giving
+// tighter boxes.
+//
+// The minimum and maximum are tracked separately for each of the eight
+// corners so that the loop has no dependency between corners and can be
+// vectorised, which std::minmax_element cannot.
+static std::optional<std::pair<float, float>> selected_z_range(
+    const float* zcorn, size_t num_cells, const bool* cell_mask)
+{
+    std::array<float, resfo::NUM_CORNERS> lo, hi;
+    lo.fill(std::numeric_limits<float>::max());
+    hi.fill(std::numeric_limits<float>::lowest());
+    auto include = [&lo, &hi](const float* cell) {
+        for (int v = 0; v < resfo::NUM_CORNERS; ++v) {
+            lo[v] = cell[v] < lo[v] ? cell[v] : lo[v];
+            hi[v] = cell[v] > hi[v] ? cell[v] : hi[v];
+        }
+    };
+
+    bool any_selected = false;
+    if (cell_mask == nullptr) {
+        any_selected = num_cells > 0;
+        for (size_t c = 0; c < num_cells; ++c)
+            include(zcorn + c * resfo::NUM_CORNERS);
+    } else {
+        for (size_t c = 0; c < num_cells; ++c) {
+            if (!cell_mask[c]) continue;
+            any_selected = true;
+            include(zcorn + c * resfo::NUM_CORNERS);
+        }
+    }
+    if (!any_selected) return std::nullopt;
+    return std::make_pair(*std::min_element(lo.begin(), lo.end()),
+                          *std::max_element(hi.begin(), hi.end()));
+}
+
 std::vector<CellResult> find_cells_containing_points(
     FloatArray points_array, FloatArray coord_array, FloatArray zcorn_array,
-    float tolerance)
+    float tolerance, std::optional<BoolArray> cell_mask_array)
 {
     auto g = validate_and_extract(points_array, coord_array, zcorn_array);
 
+    const bool* cell_mask = nullptr;
+    if (cell_mask_array.has_value()) {
+        auto mask_buf = cell_mask_array->request();
+        if (mask_buf.ndim != 3 || mask_buf.shape[0] != g.dims.ni
+            || mask_buf.shape[1] != g.dims.nj || mask_buf.shape[2] != g.dims.nk)
+            throw std::runtime_error("Cell mask array must have shape (ni, nj, nk)");
+        cell_mask = static_cast<const bool*>(mask_buf.ptr);
+    }
+
     if (g.num_points == 0) return std::vector<CellResult>();
 
-    auto build_interval_tree = [&g]() {
-        auto [z_min, z_max] = std::minmax_element(g.zcorn, g.zcorn + g.zcorn_size);
-        auto bboxes = resfo::create_column_bounding_boxes(g.coord, g.dims, {*z_min, *z_max});
-        return resfo::ColumnIntervalTree(std::move(bboxes));
-    };
+    auto z_range = selected_z_range(
+        g.zcorn, g.zcorn_size / resfo::NUM_CORNERS, cell_mask);
+
+    if (!z_range.has_value()) return std::vector<CellResult>(g.num_points);
 
     std::vector<CellResult> results;
     results.reserve(g.num_points);
 
-    auto tree = build_interval_tree();
+    resfo::ColumnIntervalTree tree(
+        resfo::create_column_bounding_boxes(g.coord, g.dims, *z_range, cell_mask));
     Eigen::Map<const Eigen::Matrix3Xf> point_map(g.points, 3, g.num_points);
     for (size_t i = 0; i < g.num_points; ++i) {
         auto r = resfo::grid_search(
-            point_map.col(i).cast<double>(), g.coord, g.zcorn, g.dims, tree, tolerance);
+            point_map.col(i).cast<double>(), g.coord, g.zcorn, g.dims, tree, tolerance,
+            cell_mask);
         results.push_back(to_result(r));
     }
     return results;
@@ -119,6 +168,7 @@ PYBIND11_MODULE(_grid_cpp, m) {
           py::arg("coord"),
           py::arg("zcorn"),
           py::arg("tolerance") = 1e-6f,
+          py::arg("cell_mask") = py::none(),
           "Find cells containing given points");
 
     m.def("point_in_cell", &point_in_cell_wrapper,

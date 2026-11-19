@@ -28,6 +28,7 @@ from typing import IO, Any, Self, TypeVar
 import numpy as np
 import resfo
 from numpy import typing as npt
+from typing_extensions import sentinel
 
 from ._grid_cpp import find_cells_containing_points, point_in_cell
 
@@ -38,6 +39,9 @@ class InvalidEgridFileError(ValueError):
 
 class InvalidGridError(ValueError):
     pass
+
+
+MISSING = sentinel("MISSING")
 
 
 @dataclass
@@ -138,14 +142,20 @@ class CornerpointGrid:
             Optionally each point is interpreted to be relative to some map
             coordinate system. Defaults to the unit coordinate system with
             origin at (0,0).
+        actnum:
+            Optionally a (ni, nj, nk) array where actnum[i,j,k] is zero if
+            the cell at i,j,k is inactive and non-zero otherwise. Defaults to
+            None, meaning all cells are active. Only set by
+            :py:meth:`read_egrid` when called with ``read_actnum=True``.
     Raises:
         InvalidGridError:
-            If coord or zcorn does not have correct shape.
+            If coord, zcorn or actnum does not have correct shape.
     """
 
     coord: npt.NDArray[np.float32]
     zcorn: npt.NDArray[np.float32]
     map_axes: MapAxes | None = None
+    actnum: npt.NDArray[np.int32] | None = None
 
     def __post_init__(self) -> None:
         if len(self.coord.shape) != 4 or self.coord.shape[2:4] != (2, 3):
@@ -161,9 +171,20 @@ class CornerpointGrid:
             )
         self.coord = np.ascontiguousarray(self.coord, dtype=np.float32)
         self.zcorn = np.ascontiguousarray(self.zcorn, dtype=np.float32)
+        if self.actnum is not None:
+            if self.actnum.shape != self.zcorn.shape[:3]:
+                raise InvalidGridError(
+                    "actnum and zcorn dimensions do not match:"
+                    f" {self.actnum.shape} vs {self.zcorn.shape[:3]}",
+                )
+            self.actnum = np.ascontiguousarray(self.actnum, dtype=np.int32)
 
     @classmethod
-    def read_egrid(cls, file_like: str | os.PathLike[str] | IO[Any]) -> Self:
+    def read_egrid(
+        cls,
+        file_like: str | os.PathLike[str] | IO[Any],
+        read_actnum: bool = False,
+    ) -> Self:
         """Read the global grid from an .EGRID or .FEGRID file.
 
         If the EGRID contains Local Grid Refinements or Coarsening Groups,
@@ -177,6 +198,11 @@ class CornerpointGrid:
                 Whether the file is formatted or not is determined by looking at the
                 extension a filepath is given and by whether the stream is a byte-stream
                 (unformatted) or a text-stream when an opened file is given.
+            read_actnum:
+                Whether to read ACTNUM into
+                :py:attr:`resfo_utilities.CornerpointGrid.actnum`, in which case
+                :py:meth:`find_cell_containing_point` ignores inactive cells by
+                default. Defaults to False, where all cells are considered active.
         Raises:
             InvalidEgridFileError:
                 When the egrid file is not valid, or contains a radial grid.
@@ -190,6 +216,7 @@ class CornerpointGrid:
         opened = False
         stream = None
         map_axes = None
+        actnum = None
 
         try:
             if isinstance(file_like, str):
@@ -262,6 +289,8 @@ class CornerpointGrid:
                             (array[2], array[3]),
                             (array[4], array[5]),
                         )
+                    case "ACTNUM  " if read_actnum:
+                        actnum = validate_array(kw, entry.read_array())
                     case "ENDGRID ":
                         break
 
@@ -298,15 +327,28 @@ class CornerpointGrid:
                 f"ZCORN size {len(zcorn)} did not match"
                 f" grid dimensions {dims} in {filename}",
             ) from err
-        return cls(coord, zcorn, map_axes)
+        if actnum is not None:
+            try:
+                actnum = actnum.reshape((dims[0], dims[1], dims[2]), order="F")
+            except ValueError as err:
+                raise InvalidEgridFileError(
+                    f"ACTNUM size {len(actnum)} did not match"
+                    f" grid dimensions {dims} in {filename}",
+                ) from err
+        return cls(coord, zcorn, map_axes, actnum)
 
     def find_cell_containing_point(
         self,
         points: npt.ArrayLike,
         map_coordinates: bool = True,
         tolerance: float = 1.0e-6,
+        cell_mask: npt.ArrayLike | None | MISSING = MISSING,
     ) -> list[tuple[int, int, int] | None]:
         """Find a cell in the grid which contains the given point.
+
+        When ``cell_mask`` is not set, only active cells are searched, so a
+        point that is only contained in inactive cells is not found. To search
+        all cells regardless of actnum, pass ``cell_mask=None``.
 
         Args:
             points:
@@ -317,14 +359,37 @@ class CornerpointGrid:
             tolerance:
                 The maximum distance to the cell boundary a point can have to
                 be considered to be contained in the cell.
+            cell_mask:
+                A (ni, nj, nk) boolean array selecting the cells to search;
+                cells where the mask is False are ignored. If None, all cells
+                are searched. If the parameter is not set, ``actnum != 0`` is
+                used, or all cells if the grid has no actnum.
 
         Returns:
             list of i,j,k indices for each point (or None if the
-            point is not contained in any cell.
+            point is not contained in any of the searched cells).
+
+        Raises:
+            ValueError:
+                If cell_mask does not have shape (ni, nj, nk).
         """
         points = np.asarray(points, dtype=np.float32)
         if len(points.shape) == 1:
             points = points[np.newaxis, :]
+
+        mask: npt.NDArray[np.bool_] | None = None
+        if cell_mask is not None and cell_mask is not MISSING:
+            mask = np.ascontiguousarray(cell_mask, dtype=np.bool_)
+            if mask.shape != self.zcorn.shape[:3]:
+                raise ValueError(
+                    f"cell_mask had shape {mask.shape},"
+                    f" expected {self.zcorn.shape[:3]}",
+                )
+        elif cell_mask is MISSING and self.actnum is not None:
+            mask = self.actnum != 0
+        # Without a mask the search takes the unfiltered path
+        if mask is not None and mask.all():
+            mask = None
 
         if map_coordinates and self.map_axes is not None:
             points = self.map_axes.transform_map_points(points)
@@ -334,6 +399,7 @@ class CornerpointGrid:
             self.coord,
             self.zcorn,
             tolerance,
+            mask,
         )
 
     def cell_corners(
